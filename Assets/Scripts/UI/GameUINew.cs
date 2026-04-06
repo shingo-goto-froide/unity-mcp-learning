@@ -95,13 +95,23 @@ public class GameUINew : MonoBehaviour
         player1Panel?.SetTurnActive(anyActive && activeIdx == 0);
         player2Panel?.SetTurnActive(anyActive && activeIdx == 1);
 
-        // Assignフェーズ中は相手のスロットを隠す
+        // Assignフェーズ中のスロット表示制御
         bool isAssignPhase = ph == GamePhase.AssignP1 || ph == GamePhase.AssignP2;
         if (isAssignPhase)
         {
-            // 操作中のプレイヤーは自分のスロットが見える・相手は隠れる
-            player1Panel?.SetSlotsHidden(activeIdx != 0);
-            player2Panel?.SetSlotsHidden(activeIdx != 1);
+            var mode = GameSettings.Mode;
+            if (mode == GameMode.AI || mode == GameMode.Online)
+            {
+                // AI・Online：自分（人間=players[0]）は常に表示、相手側は常に隠す
+                player1Panel?.SetSlotsHidden(false);
+                player2Panel?.SetSlotsHidden(true);
+            }
+            else
+            {
+                // ローカル（将来用）：操作中のプレイヤーは見える・相手は隠れる
+                player1Panel?.SetSlotsHidden(activeIdx != 0);
+                player2Panel?.SetSlotsHidden(activeIdx != 1);
+            }
         }
         else
         {
