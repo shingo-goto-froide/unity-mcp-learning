@@ -143,12 +143,8 @@ public class AIController : MonoBehaviour
 
     IEnumerator DoAssign()
     {
-        // 1フレーム待ってAnnouncementUIがIsAnimating=trueをセットするのを確実に待つ
+        // AIアサインは即座に実行（1フレームだけ待って確実にフェーズ切り替えを反映）
         yield return null;
-        // アナウンス演出が終わるまで待機
-        while (AnnouncementUI.Instance != null && AnnouncementUI.Instance.IsAnimating)
-            yield return null;
-        yield return new WaitForSeconds(GameSettings.Difficulty == AIDifficulty.Hard ? 0.5f : 0.8f);
         var gm  = GameManager.Instance;
         var ai  = gm.players[aiPlayerIndex];
         var opp = gm.players[1 - aiPlayerIndex];

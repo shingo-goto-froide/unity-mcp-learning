@@ -187,18 +187,32 @@ public class GameUINew : MonoBehaviour
     void SetPhaseHighlight(GamePhase ph)
     {
         var gm2 = GameManager.Instance;
-        int actorIdx  = gm2 != null ? gm2.CurrentActorIndex : 0;
-        bool anyTurn  = ph == GamePhase.AcquireP1 || ph == GamePhase.AcquireP2
-                     || ph == GamePhase.AssignP1  || ph == GamePhase.AssignP2;
-        bool isP1Turn = anyTurn && actorIdx == 0;
-        bool isP2Turn = anyTurn && actorIdx == 1;
+        int actorIdx   = gm2 != null ? gm2.CurrentActorIndex : 0;
+        bool anyTurn   = ph == GamePhase.AcquireP1 || ph == GamePhase.AcquireP2
+                      || ph == GamePhase.AssignP1  || ph == GamePhase.AssignP2;
         bool isAcquire = ph == GamePhase.AcquireP1 || ph == GamePhase.AcquireP2;
         bool isAssign  = ph == GamePhase.AssignP1  || ph == GamePhase.AssignP2;
+        bool isAiMode  = GameSettings.Mode == GameMode.AI;
 
-        SetPanelHighlight("Player1Panel", isP1Turn);
-        SetPanelHighlight("Player2Panel", isP2Turn);
+        // アサインフェーズ×AIモード：自分（人間=players[0]）のターンのみハイライト
+        // AIのアサインターンは両パネルともハイライトなし
+        bool p1On, p2On;
+        if (isAssign && isAiMode)
+        {
+            p1On = actorIdx == 0; // 人間がactor（先手）のときのみ
+            p2On = false;         // AIパネルは常にオフ
+        }
+        else
+        {
+            p1On = anyTurn && actorIdx == 0;
+            p2On = anyTurn && actorIdx == 1;
+        }
+
+        SetPanelHighlight("Player1Panel", p1On);
+        SetPanelHighlight("Player2Panel", p2On);
         SetPanelHighlight("PoolPanel",    isAcquire);
-        SetPanelHighlight("ControlPanel", isAssign);
+        // コントロールパネルも人間のアサインターンのみハイライト
+        SetPanelHighlight("ControlPanel", isAssign && (!isAiMode || actorIdx == 0));
     }
 
     void OnGameOver(PlayerData winner)
