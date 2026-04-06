@@ -21,8 +21,10 @@ public class PoolRowUI : MonoBehaviour
     void OnPhaseChanged(GamePhase phase)
     {
         bool acquirePhase = phase == GamePhase.AcquireP1 || phase == GamePhase.AcquireP2;
+        bool isHumanTurn = GameSettings.Mode != GameMode.AI
+            || GameManager.Instance?.CurrentActorIndex != 1;
         if (takeButton != null)
-            takeButton.interactable = acquirePhase;
+            takeButton.interactable = acquirePhase && isHumanTurn;
     }
 
     public void Initialize(int index)

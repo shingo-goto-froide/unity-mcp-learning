@@ -40,7 +40,7 @@ public class SlotRow
     public void AddLock(int n = 1, int duration = 1)
     {
         lockedCount = Mathf.Min(lockedCount + n, slotCount - filledCount);
-        lockedTurnsRemaining = Mathf.Max(lockedTurnsRemaining, duration);
+        lockedTurnsRemaining += duration;
     }
 
     // Resolve開始時に呼ぶ。残りターンを1減らし、0になったらロック解除

@@ -56,5 +56,26 @@ public class PlayerData
     }
 
     public bool IsDefeated() => currentHp <= 0;
-    public string Name => playerIndex == 0 ? "Player1" : "Player2";
+    public string Name
+    {
+        get
+        {
+            if (GameSettings.Mode == GameMode.AI)
+            {
+                if (playerIndex == 1)
+                {
+                    string diff = GameSettings.Difficulty switch
+                    {
+                        AIDifficulty.Easy   => "Easy",
+                        AIDifficulty.Normal => "Normal",
+                        AIDifficulty.Hard   => "Hard",
+                        _                   => ""
+                    };
+                    return $"AI ({diff})";
+                }
+                return "You";
+            }
+            return playerIndex == 0 ? "Player1" : "Player2";
+        }
+    }
 }

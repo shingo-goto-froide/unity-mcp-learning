@@ -103,6 +103,9 @@ public class ControlPanelUI : MonoBehaviour
 
         bool isAssign = ph == GamePhase.AssignP1 || ph == GamePhase.AssignP2;
         int pi = gm.CurrentActorIndex;
+        // AIターン中は操作を受け付けない
+        bool isHumanTurn = GameSettings.Mode != GameMode.AI || pi != 1;
+        isAssign = isAssign && isHumanTurn;
 
         if (isAssign)
         {

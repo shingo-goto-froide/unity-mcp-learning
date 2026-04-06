@@ -21,6 +21,7 @@ public class GameUINew : MonoBehaviour
     public GameObject gameOverPanel;
     public TMPro.TextMeshProUGUI gameOverText;
     public UnityEngine.UI.Button restartBtn;
+    public UnityEngine.UI.Button toTitleBtn;
 
     void Awake()
     {
@@ -50,6 +51,11 @@ public class GameUINew : MonoBehaviour
             InitializeAllPanels();
             if (gameOverPanel != null) gameOverPanel.SetActive(false);
             RefreshAll();
+        });
+
+        toTitleBtn?.onClick.AddListener(() =>
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("TitleScene");
         });
 
         if (gameOverPanel != null) gameOverPanel.SetActive(false);

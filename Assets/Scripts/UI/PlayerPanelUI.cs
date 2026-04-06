@@ -100,7 +100,16 @@ public class PlayerPanelUI : MonoBehaviour
                 if (row == _highlightedRow && !locked)
                     slotColor = Color.Lerp(slotColor, new Color(1f, 0.85f, 0.1f), 0.7f);
                 if (img != null)     img.color = slotColor;
-                if (lockOvl != null) lockOvl.SetActive(locked);
+                if (lockOvl != null)
+                {
+                    lockOvl.SetActive(locked);
+                    // 残りロックターン数を表示（例: X2）
+                    var lockTxt = lockOvl.transform.Find("Txt")?.GetComponent<TMPro.TextMeshProUGUI>();
+                    if (lockTxt != null)
+                        lockTxt.text = slotRow.lockedTurnsRemaining > 1
+                            ? $"X{slotRow.lockedTurnsRemaining}"
+                            : "X";
+                }
             }
         }
     }
