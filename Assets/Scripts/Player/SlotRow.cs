@@ -8,12 +8,12 @@ public class SlotRow
     public ResourceType assignedType;
     public int filledCount;
     public int lockedCount;
-    public int lockedTurnsRemaining { get; private set; } = 0;  // 残りロックターン数
+    public int lockedTurnsRemaining { get; private set; } = 0;
 
     public SlotRow(int idx)
     {
-        rowIndex = idx;
-        slotCount = idx + 1;
+        rowIndex   = idx;
+        slotCount  = idx + 1;
         assignedType = ResourceType.None;
     }
 
@@ -36,10 +36,15 @@ public class SlotRow
     public bool IsComplete() => filledCount >= slotCount;
     public int GetAvailableCount() => Mathf.Max(0, slotCount - lockedCount - filledCount);
 
-    // duration: このロックが何ターン持続するか
+    /// <summary>
+    /// DISロックを追加する。
+    /// 対象段がすでに埋まっている場合は空振り（何も起きない）。
+    /// </summary>
     public void AddLock(int n = 1, int duration = 1)
     {
-        lockedCount = Mathf.Min(lockedCount + n, slotCount - filledCount);
+        int available = slotCount - filledCount;
+        if (available <= 0) return; // 埋まり済みは空振り
+        lockedCount = Mathf.Min(lockedCount + n, available);
         lockedTurnsRemaining += duration;
     }
 
@@ -51,6 +56,15 @@ public class SlotRow
         if (lockedTurnsRemaining <= 0) ClearLocks();
     }
 
-    public void Clear() { assignedType = ResourceType.None; filledCount = 0; }
-    public void ClearLocks() { lockedCount = 0; lockedTurnsRemaining = 0; }
+    public void Clear()
+    {
+        assignedType = ResourceType.None;
+        filledCount  = 0;
+    }
+
+    public void ClearLocks()
+    {
+        lockedCount          = 0;
+        lockedTurnsRemaining = 0;
+    }
 }

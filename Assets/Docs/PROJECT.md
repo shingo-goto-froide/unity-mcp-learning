@@ -19,7 +19,10 @@
 | ファイル | 役割 | 主な読者 | 最終更新 |
 |---|---|---|---|
 | CLAUDE.md | Claudeとの作業フロー・共通ルール・プロンプト集。どのプロジェクトでも使い回せるテンプレート | Claude（セッション開始時に最初に読む） | 2026-04-03 |
-| PROJECT.md | このプロジェクト固有の情報。概要・注意事項・TODO・変更履歴 | Claude（CLAUDE.mdの次に読む） | 2026-04-06 |
+| PROJECT.md | このプロジェクト固有の情報。概要・注意事項・TODO・変更履歴 | Claude（CLAUDE.mdの次に読む） | 2026-04-06 | SlotRow.cs | 埋まり済み段へのDIS挙動を空振り仕様に変更（_pendingLockDuration機構を削除）|
+| 2026-04-06 | SlotRow.cs | 埋まり済み段へのDIS挙動を仕様確認・明文化。_pendingLockDuration による予約ロック機構（今ターン発動・翌ターンからロック）が実装済みであることを確認 |
+| 2026-04-06 | PlayerPanelUI / GameUINew / GameManager | DRAW処理（両者同時HP0でDRAW!表示）・シールド半減フィードバック演出（オレンジフラッシュ）追加 |
+| 2026-04-06 |
 | 仕様書_v2.0.md | ゲームのルール・フェーズ・バランス数値など「何を作るか」を定義する | Claude・開発者 | 2026-04-03 |
 | 設計書_v2.0.md | スクリプト構成・クラス設計・メソッド定義など「どう作るか」を定義する | Claude・開発者 | 2026-04-03 |
 | シーン構成書.md | BattleScene・TitleSceneのHierarchy構造とInspector値。シーン変更時は必ず更新 | Claude（シーン作業時） | 2026-04-03 |
@@ -110,3 +113,11 @@ UIテキストには英数字のみ使用すること。
 | 2026-04-06 | - | 実装 | LockedOverlay：残りロックターン数を動的表示（X → X2, X3...） |
 | 2026-04-06 | - | 実装 | SlotRow.AddLock：durationをMax採用から加算方式に変更 |
 | 2026-04-06 | - | 実装・シーン | GameOverPanelにToTitleBtn追加（TitleSceneへ戻るボタン） |
+| 2026-04-06 | - | シーン | TitleSceneにRulesBtn・RulesPanel追加（日本語ルール説明オーバーレイ） |
+| 2026-04-06 | - | 実装 | TitleScreenUI.cs：RulesPanel開閉ロジック追加 |
+| 2026-04-06 | - | 実装 | TextMeshPro日本語対応：NotoSansJP-Regular SDF追加（Dynamic モード） |
+| 2026-04-06 | - | 仕様・実装・シーン | ローカル対戦廃止：LocalBtnを削除・TitleScreenUI.csからLocal関連コード削除・ボタン3個に再配置 |
+| 2026-04-06 | - | 実装・シーン | BattleMenuUI.cs追加：右上ハンバーガーメニュー（ルール確認・タイトルへ）+ MenuBackdrop（半透明オーバーレイ・操作ブロック） |
+| 2026-04-06 | - | 実装・シーン | AnnouncementUI.cs追加：ゲーム開始（GAME START）・各フェーズ（ACQUIRE/ASSIGN/RESOLVE）アナウンス演出 |
+| 2026-04-06 | - | 実装 | AIController・GameManager(Resolve)：アナウンス演出終了まで待機するよう修正 |
+| 2026-04-06 | - | シーン | BattleScene UIサイズ調整：ControlPanel高さ210→240・PoolPanel560×178・各フォントサイズ拡大 |

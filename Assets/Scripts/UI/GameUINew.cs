@@ -42,6 +42,7 @@ public class GameUINew : MonoBehaviour
 
         gm.OnPhaseChanged += _ => RefreshAll();
         gm.OnGameOver += OnGameOver;
+        gm.OnDraw += OnDrawGame;
 
         InitializeAllPanels();
 
@@ -206,7 +207,24 @@ public class GameUINew : MonoBehaviour
         if (gameOverText != null)  gameOverText.text = $"{winner.Name} Wins!";
     }
 
-    void OnDestroy()
+    void OnDrawGame()
+    {
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        if (gameOverText != null)  gameOverText.text = "DRAW!";
+    }
+
+    // シールド半減フィードバック：両パネルにフラッシュ演出を依頼
+    public void TriggerShieldHalved(int shield0Before, int shield1Before)
+    {
+        var gm = GameManager.Instance;
+        if (gm == null) return;
+        int after0 = gm.players[0].shield;
+        int after1 = gm.players[1].shield;
+        player1Panel?.FlashShieldHalved(shield0Before, after0);
+        player2Panel?.FlashShieldHalved(shield1Before, after1);
+    }
+
+        void OnDestroy()
     {
         if (Instance == this) Instance = null;
     }

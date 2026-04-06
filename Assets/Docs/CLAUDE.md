@@ -1,4 +1,4 @@
-﻿# CLAUDE.md - Claudeとの作業ガイド（共通テンプレート）
+# CLAUDE.md - Claudeとの作業ガイド（共通テンプレート）
 > このファイルはどのUnityプロジェクトでも使い回せる共通ガイドです。
 > セッション開始時に必ず読み込んでください。
 
@@ -128,6 +128,77 @@ AI生成系ツールは Unity Museサブスクリプションが必要。
 ### GameObjectの重複に注意
 Singletonパターンを使うクラス（GameManager等）はシーンに1つだけ存在すること。
 重複するとフェーズズレ・二重実行などの原因になる。
+
+
+---
+
+## TextMeshPro で日本語を使う方法
+
+### 前提
+TextMeshPro はデフォルトでラテン文字のみ対応。日本語を表示するには日本語対応フォントアセットが必要。
+
+### 手順
+
+#### ① 日本語フォントを用意する
+システムフォント（Windows）を使う場合は `C:\Windows\Fonts\` から選ぶ。
+おすすめ：`meiryo.ttc`（メイリオ）/ `NotoSansJP-Regular.ttf`（別途ダウンロード）
+
+`Assets/Fonts/` にコピーしてUnityにインポートする。
+
+#### ② Font Asset Creator で TMP Font Asset を生成する
+**Window → TextMeshPro → Font Asset Creator**
+
+| 設定項目 | 推奨値 |
+|---|---|
+| Source Font File | インポートしたフォント |
+| Sampling Point Size | Auto Sizing |
+| Padding | 5 |
+| Packing Method | **Fast**（Optimumは重い） |
+| Atlas Resolution | **512×512** |
+| Character Set | **Custom Characters** |
+| Render Mode | SDFAA |
+
+> ⚠️ **CJK漢字（4E00-9FFF）を Character Set に含めると２万文字超でフリーズする。絶対に避けること。**
+
+**Custom Characters に貼り付ける文字列（ひらがな・カタカナ・記号）：**
+```
+ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽゃゅょっガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポャュョッーｰ、。「」・！？：；
+```
+
+**Generate Font Atlas → Save** で `.asset` ファイルを保存する。
+
+#### ③ Font Asset を Dynamic モードに変更する（重要）
+右クリックで作成した場合 **Static モードになっている**。
+Static だと登録外の文字が白い□で表示される。
+
+Project ウィンドウで生成した `.asset` を選択 → Inspector で **Atlas Population Mode を Dynamic に変更**。
+
+UnityMCP 経由で自動設定する場合：
+```csharp
+var so = new SerializedObject(fontAsset);
+so.FindProperty("m_AtlasPopulationMode").intValue = 1; // Dynamic
+so.FindProperty("m_IsMultiAtlasTexturesEnabled").boolValue = true;
+so.ApplyModifiedProperties();
+EditorUtility.SetDirty(fontAsset);
+AssetDatabase.SaveAssets();
+```
+
+#### ④ TextMeshPro コンポーネントにフォントを割り当てる
+Inspector の Font Asset フィールドに作成した `.asset` をドラッグ、または UnityMCP で自動設定。
+
+---
+
+### トラブルシューティング
+
+| 症状 | 原因 | 対処 |
+|---|---|---|
+| 文字が白い□で表示される | Static モードで未登録文字 | Atlas Population Mode を Dynamic に変更 |
+| Font Asset Creator がフリーズ | CJK漢字（素4E00-9FFFの約２万文字）を含めている | Character Set から CJK範囲を外す |
+| Generate Font Atlas が進まない | 同上 | キャンセルできない場合はUnityを強制終了 |
+| 白い四角がテキストを隐す | UIのパディング・レイアウト設定の問題 | ContentPanelのパディングを調整する |
+
+### フォントアセットの保存場所
+`Assets/Fonts/` に配置するのを推奨。
 
 ---
 

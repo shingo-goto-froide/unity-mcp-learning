@@ -10,9 +10,12 @@ public class TitleScreenUI : MonoBehaviour
     public GameObject aiLevelPanel;
 
     [Header("Main Menu Buttons")]
-    public Button localBtn;
     public Button aiBtn;
     public Button onlineBtn;
+
+    [Header("Rules")]
+    public GameObject rulesPanel;
+    public UnityEngine.UI.Button rulesBtn;
 
     [Header("AI Level Buttons")]
     public Button easyBtn;
@@ -25,21 +28,15 @@ public class TitleScreenUI : MonoBehaviour
 
     void Start()
     {
-        localBtn?.onClick.AddListener(OnLocal);
         aiBtn?.onClick.AddListener(OnAI);
         onlineBtn?.onClick.AddListener(OnOnline);
         easyBtn?.onClick.AddListener(() => OnAILevel(AIDifficulty.Easy));
         normalBtn?.onClick.AddListener(() => OnAILevel(AIDifficulty.Normal));
         hardBtn?.onClick.AddListener(() => OnAILevel(AIDifficulty.Hard));
         backBtn?.onClick.AddListener(OnBack);
+        rulesBtn?.onClick.AddListener(OnRules);
 
         ShowMainMenu();
-    }
-
-    void OnLocal()
-    {
-        GameSettings.Mode = GameMode.Local;
-        LoadGame();
     }
 
     void OnAI()
@@ -61,12 +58,18 @@ public class TitleScreenUI : MonoBehaviour
         LoadGame();
     }
 
+    void OnRules()
+    {
+        if (rulesPanel != null) rulesPanel.SetActive(true);
+    }
+
     void OnBack() => ShowMainMenu();
 
     void ShowMainMenu()
     {
         mainMenuPanel?.SetActive(true);
         aiLevelPanel?.SetActive(false);
+        if (rulesPanel != null) rulesPanel.SetActive(false);
     }
 
     void LoadGame() => SceneManager.LoadScene(gameSceneName);

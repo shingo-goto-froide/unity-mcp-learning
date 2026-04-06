@@ -188,7 +188,34 @@ public class PlayerPanelUI : MonoBehaviour
         if (turnLbl != null) turnLbl.gameObject.SetActive(isActive);
     }
 
-    public static string Short(ResourceType t) => t switch
+    // シールド半減フィードバック：シールドテキストをオレンジフラッシュ
+    public void FlashShieldHalved(int before, int after)
+    {
+        if (before <= 0) return;
+        StartCoroutine(ShieldHalvedCoroutine(before, after));
+    }
+
+    System.Collections.IEnumerator ShieldHalvedCoroutine(int before, int after)
+    {
+        if (shieldText == null) yield break;
+        var origColor = shieldText.color;
+        var orange    = new Color(1f, 0.6f, 0.1f);
+        shieldText.text  = $"Shield {before} >> {after}";
+        shieldText.color = orange;
+        for (int i = 0; i < 2; i++)
+        {
+            shieldText.color = orange;
+            yield return new UnityEngine.WaitForSeconds(0.15f);
+            shieldText.color = new Color(1f, 0.9f, 0.5f);
+            yield return new UnityEngine.WaitForSeconds(0.15f);
+        }
+        shieldText.color = orange;
+        yield return new UnityEngine.WaitForSeconds(0.4f);
+        shieldText.color = origColor;
+        shieldText.text  = $"Shield {after}";
+    }
+
+        public static string Short(ResourceType t) => t switch
     {
         ResourceType.Attack  => "ATK",
         ResourceType.Defense => "DEF",

@@ -131,7 +131,11 @@ public class ActionResolver
     {
         var avail = new List<int>();
         for (int i = 0; i < 5; i++)
-            if (target.slotGrid.rows[i].GetAvailableCount() > 0) avail.Add(i);
+        {
+            var row = target.slotGrid.rows[i];
+            // 空きあり段 OR 埋まっている段（次ターンにアサインをブロック）を候補にする
+            if (row.GetAvailableCount() > 0 || row.IsComplete()) avail.Add(i);
+        }
         for (int i = 0; i < count && avail.Count > 0; i++)
         {
             int pick = Random.Range(0, avail.Count);

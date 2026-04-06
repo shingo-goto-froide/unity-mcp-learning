@@ -15,8 +15,11 @@ public class GameManager : MonoBehaviour
 
     public event Action<GamePhase> OnPhaseChanged;
     public event Action<PlayerData> OnGameOver;
+    public event Action OnDraw;
     public string ResolveMessage { get; private set; } = "";
 
+    PlayerData _pendingWinner = null; // Resolve終了後にGameOverを発火するために保存
+    bool _isDraw = false;
     int[] snapFilled = new int[5];
     ResourceType[] snapTypes = new ResourceType[5];
     System.Collections.Generic.List<ResourceType> snapResources;
@@ -54,6 +57,8 @@ public class GameManager : MonoBehaviour
     {
         int hp     = balanceSO != null ? balanceSO.initialHP            : 20;
         int maxRes = balanceSO != null ? balanceSO.maxResourceCapacity : 6;
+        _pendingWinner = null;
+        _isDraw = false;
         players = new PlayerData[] { new PlayerData(0, hp, maxRes), new PlayerData(1, hp, maxRes) };
         turnManager = new TurnManager();
         poolManager = new ResourcePoolManager();
@@ -139,6 +144,10 @@ public class GameManager : MonoBehaviour
 
     System.Collections.IEnumerator ResolveCoroutine()
     {
+        // Resolve アナウンス演出が終わるまで待機
+        while (AnnouncementUI.Instance != null && AnnouncementUI.Instance.IsAnimating)
+            yield return null;
+
         // コンボ数・DIS持続ターンを事前計算
         actionResolver.PrepareResolve(players[0], players[1]);
         // ロックをカウントダウン（0になった段だけ解除）
@@ -190,9 +199,16 @@ public class GameManager : MonoBehaviour
         }
 
         actionResolver.ClearAfterResolve(players[0], players[1]);
-        // Resolve後にシールド半減（案A：積んだターンは全額有効、次ターンから半減）
+        // シールド半減（半減前の値を記録してフィードバック表示）
+        int[] shieldBefore = { players[0].shield, players[1].shield };
         foreach (var p in players) p.HalfShield();
         Debug.Log($"Turn {turnManager.turnCount}: Shield halved after Resolve.");
+        // シールドが変化したパネルにフィードバック演出
+        if (shieldBefore[0] > 0 || shieldBefore[1] > 0)
+        {
+            GameUINew.Instance?.TriggerShieldHalved(shieldBefore[0], shieldBefore[1]);
+            yield return new UnityEngine.WaitForSeconds(0.9f);
+        }
         ResolveMessage = "";
         GameUINew.Instance?.ClearResolveHighlights();
 
@@ -204,15 +220,41 @@ public class GameManager : MonoBehaviour
         else
         {
             GameUINew.Instance?.RefreshAll();
+            // 全演出（Announcement・EffectManager）が終わるまで待機
+            while (AnnouncementUI.Instance != null && AnnouncementUI.Instance.IsAnimating)
+                yield return null;
+            yield return new WaitForSeconds(0.6f);
+            // GameOver イベントを発火
+            if (_isDraw)
+            {
+                OnDraw?.Invoke();
+                _isDraw = false;
+            }
+            else if (_pendingWinner != null)
+            {
+                OnGameOver?.Invoke(_pendingWinner);
+                _pendingWinner = null;
+            }
         }
     }
 
     void OnPlayerDefeated(PlayerData p)
     {
         turnManager.SetGameOver();
-        var winner = players[p.playerIndex == 0 ? 1 : 0];
-        Debug.Log($"{winner.Name} Wins!");
-        OnGameOver?.Invoke(winner);
+        var other = players[1 - p.playerIndex];
+        if (other.IsDefeated())
+        {
+            // 両者同時にHP0 → DRAW
+            _isDraw = true;
+            _pendingWinner = null;
+            Debug.Log("DRAW!");
+        }
+        else
+        {
+            _isDraw = false;
+            _pendingWinner = other;
+            Debug.Log($"{other.Name} Wins!");
+        }
     }
 
     void OnDestroy()

@@ -76,6 +76,11 @@ public class AIController : MonoBehaviour
 
     IEnumerator DoAcquire()
     {
+        // 1フレーム待ってAnnouncementUIがIsAnimating=trueをセットするのを確実に待つ
+        yield return null;
+        // アナウンス演出が終わるまで待機
+        while (AnnouncementUI.Instance != null && AnnouncementUI.Instance.IsAnimating)
+            yield return null;
         yield return new WaitForSeconds(GameSettings.Difficulty == AIDifficulty.Hard ? 0.6f : 0.8f);
         var gm    = GameManager.Instance;
         var pools = gm.poolManager.pools;
@@ -138,6 +143,11 @@ public class AIController : MonoBehaviour
 
     IEnumerator DoAssign()
     {
+        // 1フレーム待ってAnnouncementUIがIsAnimating=trueをセットするのを確実に待つ
+        yield return null;
+        // アナウンス演出が終わるまで待機
+        while (AnnouncementUI.Instance != null && AnnouncementUI.Instance.IsAnimating)
+            yield return null;
         yield return new WaitForSeconds(GameSettings.Difficulty == AIDifficulty.Hard ? 0.5f : 0.8f);
         var gm  = GameManager.Instance;
         var ai  = gm.players[aiPlayerIndex];
