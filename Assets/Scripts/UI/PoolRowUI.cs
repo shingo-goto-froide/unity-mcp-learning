@@ -23,8 +23,15 @@ public class PoolRowUI : MonoBehaviour
         bool acquirePhase = phase == GamePhase.AcquireP1 || phase == GamePhase.AcquireP2;
         bool isHumanTurn = GameSettings.Mode != GameMode.AI
             || GameManager.Instance?.CurrentActorIndex != 1;
+        // 満杯のときはボタンを無効化
+        bool playerFull = false;
+        if (acquirePhase && isHumanTurn && GameManager.Instance != null)
+        {
+            var gm = GameManager.Instance;
+            playerFull = gm.players[gm.CurrentActorIndex].resourceHolder.IsFull();
+        }
         if (takeButton != null)
-            takeButton.interactable = acquirePhase && isHumanTurn;
+            takeButton.interactable = acquirePhase && isHumanTurn && !playerFull;
     }
 
     public void Initialize(int index)

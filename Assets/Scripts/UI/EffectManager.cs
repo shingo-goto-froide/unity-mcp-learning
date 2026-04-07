@@ -8,6 +8,19 @@ public class EffectManager : MonoBehaviour
     public static EffectManager Instance { get; private set; }
     RectTransform _canvasRt;
 
+    int _activeEffects = 0;
+    public bool IsPlaying => _activeEffects > 0;
+
+    void StartTracked(System.Collections.IEnumerator coroutine)
+        => StartCoroutine(TrackCoroutine(coroutine));
+
+    System.Collections.IEnumerator TrackCoroutine(System.Collections.IEnumerator inner)
+    {
+        _activeEffects++;
+        yield return StartCoroutine(inner);
+        _activeEffects--;
+    }
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -18,21 +31,86 @@ public class EffectManager : MonoBehaviour
     // ─── Public API ───────────────────────────────────────────────────────────
 
     public void PlayAttack(RectTransform srcRowRt, RectTransform dstPanelRt, int damage)
-        => StartCoroutine(AttackCoroutine(srcRowRt, dstPanelRt, damage));
+        => StartTracked(AttackCoroutine(srcRowRt, dstPanelRt, damage));
 
     public void PlayDefense(RectTransform defenderPanelRt, RectTransform opponentPanelRt)
-        => StartCoroutine(DefenseCoroutine(defenderPanelRt, opponentPanelRt));
+        => StartTracked(DefenseCoroutine(defenderPanelRt, opponentPanelRt));
+
+    public void PlayDisruptDelayed(RectTransform targetPanelRt, float delay)
+        => StartTracked(DelayedDisrupt(targetPanelRt, delay));
+
+    System.Collections.IEnumerator DelayedDisrupt(RectTransform targetPanelRt, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        StartTracked(FlashPanel(targetPanelRt, new Color(0.65f, 0.2f, 0.9f), 0.3f));
+    }
 
     public void PlayDisrupt(RectTransform targetPanelRt)
     {
-        Color c = new Color(0.65f, 0.2f, 0.9f);
-        StartCoroutine(FlashPanel(targetPanelRt, c, 0.3f));
-        StartCoroutine(FloatText("LOCK!", GetPanelCenter(targetPanelRt), c, 36f, 1.2f));
+        StartTracked(FlashPanel(targetPanelRt, new Color(0.65f, 0.2f, 0.9f), 0.3f));
     }
 
-    // atkRowRt=攻撃側Row, atkPanelRt=攻撃側Panel, defPanelRt=防御側Panel, reflectDmg=反射ダメージ
     public void PlayJustGuard(RectTransform atkRowRt, RectTransform atkPanelRt, RectTransform defPanelRt, int reflectDmg)
-        => StartCoroutine(JustGuardCoroutine(atkRowRt, atkPanelRt, defPanelRt, reflectDmg));
+        => StartTracked(JustGuardCoroutine(atkRowRt, atkPanelRt, defPanelRt, reflectDmg));
+
+    public float PlayCombo(RectTransform srcPanelRt, RectTransform dstPanelRt, int comboCount, int comboDamage)
+    {
+        StartTracked(ComboCoroutine(srcPanelRt, dstPanelRt, comboCount, comboDamage));
+        return 0.5f + comboCount * 0.35f + 0.5f;
+    }
+
+    System.Collections.IEnumerator ComboCoroutine(RectTransform srcRt, RectTransform dstRt, int comboCount, int comboDmg)
+    {
+        if (_canvasRt == null) yield break;
+        Color comboColor = new Color(1f, 0.6f, 0.1f);
+        string comboLabel = "COMBO x" + comboCount + "!";
+        // P1（左）なら右辺の外、P2（右）なら左辺の外、高さはHP付近
+        Vector3[] _corners = new Vector3[4];
+        srcRt.GetWorldCorners(_corners);
+        Vector2 _bl = ToCanvasLocal(_corners[0]);
+        Vector2 _tl = ToCanvasLocal(_corners[1]);
+        Vector2 _tr = ToCanvasLocal(_corners[2]);
+        float _panelH = _tl.y - _bl.y;
+        float _hpY   = _bl.y + _panelH * 0.78f; // 上から約22%＝HP付近
+        Vector2 _ctr = (_bl + _tr) * 0.5f;
+        bool _isLeft = _ctr.x < 0f; // キャンバス中心より左ならP1
+        float _textX = _isLeft ? _tr.x + 20f : _bl.x - 20f;
+        Vector2 _textPos = new Vector2(_textX, _hpY);
+        StartTracked(FloatTextWide(comboLabel, _textPos, comboColor, 44f, 1.2f, 280f));
+        yield return new WaitForSeconds(0.3f);
+        for (int i = 0; i < comboCount; i++)
+        {
+            StartTracked(ComboOrbCoroutine(srcRt, dstRt, i, comboCount));
+            yield return new WaitForSeconds(0.35f);
+        }
+        yield return new WaitForSeconds(0.4f);
+    }
+
+    System.Collections.IEnumerator ComboOrbCoroutine(RectTransform srcRt, RectTransform dstRt, int orbIdx, int total)
+    {
+        Color orbColor = new Color(1f, 0.5f, 0.1f);
+        Vector2 srcPos  = GetPanelCenter(srcRt);
+        Vector2 dstEdge = GetInnerEdgePoint(srcRt, dstRt, 22f);
+        float vOffset   = (orbIdx - (total - 1) * 0.5f) * 18f;
+        Vector2 startPos = srcPos + Vector2.up * vOffset;
+        var orb   = CreateOrbGO(orbColor);
+        var orbRt = orb.GetComponent<RectTransform>();
+        orbRt.anchoredPosition = startPos;
+        for (float t = 0; t < 0.45f; t += Time.deltaTime)
+        {
+            if (orb == null) yield break;
+            float p = Mathf.SmoothStep(0f, 1f, t / 0.45f);
+            orbRt.anchoredPosition = Vector2.Lerp(startPos, dstEdge, p);
+            orbRt.localScale       = Vector3.one * Mathf.Lerp(0.6f, 1.0f, p);
+            yield return null;
+        }
+        if (orb != null) Destroy(orb);
+        StartTracked(BurstCoroutine(dstEdge, orbColor));
+        StartTracked(FlashPanel(dstRt, orbColor, 0.25f));
+        Vector2 textPos = GetPanelCenter(dstRt) + Vector2.up * (10f + orbIdx * 22f);
+        StartTracked(FloatText("DMG -1", textPos, orbColor, 28f, 0.8f));
+    }
+
 
     // ─── ATK: 光球 → 内側エッジで爆発 ────────────────────────────────────────
 
@@ -56,9 +134,9 @@ public class EffectManager : MonoBehaviour
         }
         Destroy(orb);
 
-        StartCoroutine(BurstCoroutine(edgePos, atkColor));
-        StartCoroutine(FlashPanel(dstRt, atkColor, 0.35f));
-        StartCoroutine(FloatText($"DMG -{damage}", GetPanelCenter(dstRt), atkColor, 36f, 1.2f));
+        StartTracked(BurstCoroutine(edgePos, atkColor));
+        StartTracked(FlashPanel(dstRt, atkColor, 0.35f));
+        StartTracked(FloatText($"DMG -{damage}", GetPanelCenter(dstRt), atkColor, 36f, 1.2f));
     }
 
     // ─── JUST GUARD: 跳ね返りアニメーション ──────────────────────────────────
@@ -94,10 +172,10 @@ public class EffectManager : MonoBehaviour
         Destroy(orb1);
 
         // Phase2: 防御側エッジでバースト → JUST GUARD! テキスト（防御側パネル中心）
-        StartCoroutine(BurstCoroutine(defEdgePos, jgColor));
-        StartCoroutine(FlashPanel(defPanelRt, jgColor, 0.3f));
-        StartCoroutine(ShieldVisual(defPanelRt, atkPanelRt));  // ガードエフェクト
-        StartCoroutine(FloatText("JUST GUARD!", GetPanelCenter(defPanelRt), jgColor, 36f, 1.3f));
+        StartTracked(BurstCoroutine(defEdgePos, jgColor));
+        StartTracked(FlashPanel(defPanelRt, jgColor, 0.3f));
+        StartTracked(ShieldVisual(defPanelRt, atkPanelRt));  // ガードエフェクト
+        StartTracked(FloatText("JUST GUARD!", GetPanelCenter(defPanelRt), jgColor, 36f, 1.3f));
 
         yield return new WaitForSeconds(0.2f);
 
@@ -123,9 +201,9 @@ public class EffectManager : MonoBehaviour
         Destroy(orb2);
 
         // Phase4: 攻撃側にヒット → バースト + フラッシュ + DMG テキスト
-        StartCoroutine(BurstCoroutine(atkEdgePos, jgColor));
-        StartCoroutine(FlashPanel(atkPanelRt, jgColor, 0.4f));
-        StartCoroutine(FloatText($"DMG -{reflectDmg}", GetPanelCenter(atkPanelRt), new Color(1f, 0.2f, 0.1f), 36f, 1.2f));
+        StartTracked(BurstCoroutine(atkEdgePos, jgColor));
+        StartTracked(FlashPanel(atkPanelRt, jgColor, 0.4f));
+        StartTracked(FloatText($"DMG -{reflectDmg}", GetPanelCenter(atkPanelRt), new Color(1f, 0.2f, 0.1f), 36f, 1.2f));
     }
 
     // ─── DEF: 縦の盾エフェクト ────────────────────────────────────────────────
@@ -154,7 +232,7 @@ public class EffectManager : MonoBehaviour
         for (float t = 0; t < 0.12f; t += Time.deltaTime)
         { float p = t / 0.12f; SetSX(glowGo, p); SetSX(shieldGo, p); yield return null; }
         SetSX(glowGo, 1f); SetSX(shieldGo, 1f);
-        StartCoroutine(FloatText("DEF!", GetPanelCenter(defPanelRt), sc, 34f, 1.1f));  // シールド展開と同時に表示
+        StartTracked(FloatText("DEF!", GetPanelCenter(defPanelRt), sc, 34f, 1.1f));  // シールド展開と同時に表示
 
         yield return new WaitForSeconds(0.4f);
 
@@ -308,6 +386,32 @@ public class EffectManager : MonoBehaviour
         for (float t = 0; t < dur; t += Time.deltaTime)
         { img.color = Color.Lerp(new Color(fc.r, fc.g, fc.b, 0.65f), orig, t / dur); yield return null; }
         img.color = orig;
+    }
+
+    IEnumerator FloatTextWide(string text, Vector2 pos, Color color, float fontSize, float dur, float width)
+    {
+        if (_canvasRt == null) yield break;
+        var go = new GameObject("FT", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        go.transform.SetParent(_canvasRt, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = Vector2.one * 0.5f;
+        rt.anchoredPosition = pos; rt.sizeDelta = new Vector2(width, 80f);
+        var tmp = go.GetComponent<TextMeshProUGUI>();
+        tmp.text = text; tmp.fontSize = fontSize; tmp.fontStyle = FontStyles.Bold;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.enableWordWrapping = false;
+        tmp.overflowMode = TextOverflowModes.Overflow;
+        tmp.color = color; tmp.raycastTarget = false;
+        float riseStart = dur * 0.3f;
+        for (float t = 0; t < dur; t += Time.deltaTime)
+        {
+            float p = Mathf.Max(0f, (t - riseStart) / (dur - riseStart));
+            rt.anchoredPosition = pos + Vector2.up * (55f * p);
+            tmp.color = new Color(color.r, color.g, color.b, 1f - p * 0.95f);
+            yield return null;
+        }
+        Destroy(go);
     }
 
     IEnumerator FloatText(string text, Vector2 pos, Color color, float fontSize, float dur)

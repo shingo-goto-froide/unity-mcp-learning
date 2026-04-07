@@ -16,8 +16,10 @@ public class ActionResolver
     int _p1DisDuration = 1;
     int _p2DisDuration = 1;
 
-    public int P1AtkCombo => _p1AtkCombo;
-    public int P2AtkCombo => _p2AtkCombo;
+    public int P1AtkCombo    => _p1AtkCombo;
+    public int P2AtkCombo    => _p2AtkCombo;
+    public int P1DisDuration => _p1DisDuration;
+    public int P2DisDuration => _p2DisDuration;
 
     public ActionResolver(GameBalanceSO balance = null) { _balance = balance; }
 
@@ -98,9 +100,8 @@ public class ActionResolver
                 sb.Append($"{owner.Name} DEF +{shieldTable[i]}Shield  ");
                 break;
             case ResourceType.Disrupt:
-                int dur = owner.playerIndex == 0 ? _p1DisDuration : _p2DisDuration;
-                ApplyLocks(opp, lockTable[i], dur);
-                sb.Append($"{owner.Name} DIS x{lockTable[i]}Lock({dur}T)  ");
+                ApplyLocks(opp, lockTable[i], 1); // DISコンボ廃止のため常に1ターン固定
+                sb.Append($"{owner.Name} DIS x{lockTable[i]}Lock(1T)  ");
                 break;
         }
     }

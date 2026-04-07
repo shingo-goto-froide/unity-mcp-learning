@@ -141,13 +141,47 @@ public class AIController : MonoBehaviour
     // Assign フェーズ
     // =====================================================
 
+    // 先手AIが計画した配置を保存（人間のEndAssign時に適用）
+    System.Collections.Generic.List<(int row, ResourceType res)> _pendingPlan = null;
+
+    // GameManager から呼ばれる：Resolve直前にAIの保留アサインを適用
+    public void ApplyPendingPlan()
+    {
+        if (_pendingPlan == null) return;
+        var gm = GameManager.Instance;
+        var ai = gm.players[aiPlayerIndex];
+        foreach (var (row, res) in _pendingPlan)
+        {
+            if (!ai.resourceHolder.resources.Contains(res)) continue;
+            if (!ai.slotGrid.rows[row].CanAssign(res)) continue;
+            ai.slotGrid.rows[row].TryAssign(res);
+            ai.resourceHolder.Remove(res);
+        }
+        _pendingPlan = null;
+        GameUINew.Instance?.RefreshAll();
+    }
+
     IEnumerator DoAssign()
     {
-        // AIアサインは即座に実行（1フレームだけ待って確実にフェーズ切り替えを反映）
         yield return null;
+        while (AnnouncementUI.Instance != null && AnnouncementUI.Instance.IsAnimating)
+            yield return null;
+
         var gm  = GameManager.Instance;
         var ai  = gm.players[aiPlayerIndex];
         var opp = gm.players[1 - aiPlayerIndex];
+
+        // AI が先手（AssignP1）のとき：計画を保存して即EndAssign
+        // 人間のEndAssignタイミングで ApplyPendingPlan() が呼ばれる
+        if (gm.CurrentActorIndex == aiPlayerIndex &&
+            gm.turnManager.currentPhase == GamePhase.AssignP1)
+        {
+            _pendingPlan = ComputePlan(ai, opp);
+            gm.EndAssign();
+            yield break;
+        }
+
+        // AI が後手（AssignP2）のとき：通常通りアサイン
         switch (GameSettings.Difficulty)
         {
             case AIDifficulty.Easy:   AssignEasy(gm, ai);         break;
@@ -157,6 +191,70 @@ public class AIController : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         gm.EndAssign();
     }
+
+    // 難易度別アサイン計画（実際には適用せず List に積む）
+    System.Collections.Generic.List<(int, ResourceType)> ComputePlan(PlayerData ai, PlayerData opp)
+    {
+        var plan = new System.Collections.Generic.List<(int, ResourceType)>();
+        // リソースと枠の仮コピー
+        var res  = new System.Collections.Generic.List<ResourceType>(ai.resourceHolder.resources);
+        // スロットの空き枠は実データをそのまま参照（読み取り専用）
+        switch (GameSettings.Difficulty)
+        {
+            case AIDifficulty.Easy:   PlanEasy(ai, res, plan);         break;
+            case AIDifficulty.Normal: PlanNormal(ai, res, plan);       break;
+            case AIDifficulty.Hard:   PlanHard(ai, opp, res, plan);    break;
+        }
+        return plan;
+    }
+
+    void PlanEasy(PlayerData ai, System.Collections.Generic.List<ResourceType> res,
+                  System.Collections.Generic.List<(int, ResourceType)> plan)
+    {
+        var shuffled = new System.Collections.Generic.List<ResourceType>(res);
+        Shuffle(shuffled);
+        foreach (var r in shuffled)
+        {
+            var rows = AvailableRows(ai, r);
+            if (rows.Count == 0) continue;
+            int row = rows[Random.Range(0, rows.Count)];
+            plan.Add((row, r));
+            res.Remove(r);
+        }
+    }
+
+    void PlanNormal(PlayerData ai, System.Collections.Generic.List<ResourceType> res,
+                    System.Collections.Generic.List<(int, ResourceType)> plan)
+    {
+        foreach (var preferred in new[] { ResourceType.Attack, ResourceType.Defense, ResourceType.Disrupt })
+            PlanPlaceAll(ai, res, plan, preferred);
+        PlanEasy(ai, res, plan);
+    }
+
+    void PlanHard(PlayerData ai, PlayerData opp,
+                  System.Collections.Generic.List<ResourceType> res,
+                  System.Collections.Generic.List<(int, ResourceType)> plan)
+    {
+        // Hardは既存のAssignHardロジックと同等をPlan版で再現
+        // 簡略化: Normalと同じ計画を立てる（スナップショット参照が難しいため）
+        PlanNormal(ai, res, plan);
+    }
+
+    void PlanPlaceAll(PlayerData ai, System.Collections.Generic.List<ResourceType> res,
+                      System.Collections.Generic.List<(int, ResourceType)> plan,
+                      ResourceType type)
+    {
+        while (res.Contains(type))
+        {
+            var rows = AvailableRows(ai, type);
+            if (rows.Count == 0) break;
+            int row = rows.OrderBy(r => ai.slotGrid.rows[r].GetAvailableCount())
+                          .ThenByDescending(r => DmgTable[r]).First();
+            plan.Add((row, type));
+            res.Remove(type);
+        }
+    }
+
 
     // =====================================================
     // Easy

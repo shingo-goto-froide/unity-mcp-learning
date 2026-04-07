@@ -95,30 +95,9 @@ public class GameUINew : MonoBehaviour
         player1Panel?.SetTurnActive(anyActive && activeIdx == 0);
         player2Panel?.SetTurnActive(anyActive && activeIdx == 1);
 
-        // Assignフェーズ中のスロット表示制御
-        bool isAssignPhase = ph == GamePhase.AssignP1 || ph == GamePhase.AssignP2;
-        if (isAssignPhase)
-        {
-            var mode = GameSettings.Mode;
-            if (mode == GameMode.AI || mode == GameMode.Online)
-            {
-                // AI・Online：自分（人間=players[0]）は常に表示、相手側は常に隠す
-                player1Panel?.SetSlotsHidden(false);
-                player2Panel?.SetSlotsHidden(true);
-            }
-            else
-            {
-                // ローカル（将来用）：操作中のプレイヤーは見える・相手は隠れる
-                player1Panel?.SetSlotsHidden(activeIdx != 0);
-                player2Panel?.SetSlotsHidden(activeIdx != 1);
-            }
-        }
-        else
-        {
-            // Assign以外（Acquire・Resolve等）は両方表示
-            player1Panel?.SetSlotsHidden(false);
-            player2Panel?.SetSlotsHidden(false);
-        }
+        // 同時コミット方式のため隠蔽なし（両パネル常に表示）
+        player1Panel?.SetSlotsHidden(false);
+        player2Panel?.SetSlotsHidden(false);
         SetPhaseHighlight(ph);
     }
 
@@ -183,15 +162,26 @@ public class GameUINew : MonoBehaviour
             return;
         }
 
+        // DEFが絡む場合はDISを0.5秒遅延（DEF先行仕様に合わせる）
+        bool anyDef = p1Type == ResourceType.Defense || p2Type == ResourceType.Defense;
+
         // P1エフェクト
         if (p1Type == ResourceType.Attack  && p2Rt != null) em.PlayAttack(GetRowRt(player1Panel), p2Rt, damage);
         if (p1Type == ResourceType.Defense && p1Rt != null) em.PlayDefense(p1Rt, p2Rt);
-        if (p1Type == ResourceType.Disrupt && p2Rt != null) em.PlayDisrupt(p2Rt);
+        if (p1Type == ResourceType.Disrupt && p2Rt != null)
+        {
+            if (anyDef) em.PlayDisruptDelayed(p2Rt, 0.5f);
+            else        em.PlayDisrupt(p2Rt);
+        }
 
         // P2エフェクト（ATK同士DRAW含む）
         if (p2Type == ResourceType.Attack  && p1Rt != null) em.PlayAttack(GetRowRt(player2Panel), p1Rt, damage);
         if (p2Type == ResourceType.Defense && p2Rt != null) em.PlayDefense(p2Rt, p1Rt);
-        if (p2Type == ResourceType.Disrupt && p1Rt != null) em.PlayDisrupt(p1Rt);
+        if (p2Type == ResourceType.Disrupt && p1Rt != null)
+        {
+            if (anyDef) em.PlayDisruptDelayed(p1Rt, 0.5f);
+            else        em.PlayDisrupt(p1Rt);
+        }
     }
 
     void SetPhaseHighlight(GamePhase ph)
