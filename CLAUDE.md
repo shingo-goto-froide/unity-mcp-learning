@@ -1,4 +1,4 @@
-﻿# CLAUDE.md - Claudeとの作業ガイド（共通テンプレート）
+# CLAUDE.md - Claudeとの作業ガイド（共通テンプレート）
 > このファイルはどのUnityプロジェクトでも使い回せる共通ガイドです。
 > CLIおよびVSCode拡張ではセッション開始時に自動で読み込まれます。
 > Claude Desktopでは、セッション開始時に手動で読み込ませてください。
@@ -29,6 +29,18 @@
 
 ## フェーズ詳細
 
+> ### Claude Codeについて（CLI専用機能）
+> **Claude Code** はターミナル（VSCode統合ターミナル・PowerShell等）から起動するCLIツール。
+> プロジェクトルートで `claude` コマンドを実行し、対話形式で操作する。
+> `.claude/commands/` に置いたMarkdownが `/コマンド名` として使用できる。
+> **Claude Desktopでは使用不可。** Claude DesktopはUnityMCPとの接続専用として使い分ける。
+>
+> ```bash
+> cd "C:\Users\s-goto\Unity Projects\unity-mcp-learning"
+> claude          # Claude Code起動
+> /gen-design     # コマンド実行例
+> ```
+
 ### 1. 企画フェーズ
 **使用ツール:** Claude Desktop + UnityMCP
 
@@ -44,6 +56,9 @@ CLAUDE.mdを読みました。企画フェーズを開始します。
 仕様書テンプレートに従って、ゲームの仕様を一緒に作ってください。
 ```
 
+> 💡 **Claude Codeコマンド（CLI）：** `/new-spec`
+> 仕様書テンプレートを展開して対話形式で作成する。PROJECT.mdを自動参照。
+
 ---
 
 ### 2. 設計フェーズ
@@ -52,6 +67,9 @@ CLAUDE.mdを読みました。企画フェーズを開始します。
 1. `Assets/Docs/仕様書.md` を読み込ませ、`Assets/Docs/設計書.md` を生成（クラス構成・依存関係・メソッド定義まで）
 2. 人が設計書を確認
 3. Git commit
+
+> 💡 **Claude Codeコマンド（CLI）：** `/gen-design`
+> 仕様書を読んで設計書を自動生成。クラス構成・依存関係・メソッド定義まで含む。
 
 ---
 
@@ -64,6 +82,10 @@ CLAUDE.mdを読みました。企画フェーズを開始します。
 4. 人がシーン構成書を確認
 5. `Assets/Docs/シーン構成書.md` をもとにシーンを構築
 6. Git commit
+
+> 💡 **Claude Codeコマンド（CLI）：**
+> - `/gen-scripts` ：設計書からスクリプト一括生成（コンパイルエラーは自己修正）
+> - `/gen-scene` ：シーン構成書に従いTitleScene・BattleSceneを構築
 
 ---
 
@@ -80,6 +102,11 @@ CLAUDE.mdを読みました。企画フェーズを開始します。
 |---|---|
 | 軽微なバグ（仕様・設計に影響しない） | CLI即修正 → 修正記録に残す |
 | 仕様・設計に影響するバグ | 必ず設計フェーズに戻る |
+
+> 💡 **Claude Codeコマンド（CLI）：**
+> - `/check-diff` ：実装とドキュメントの差分をレポート形式で出力
+> - `/debug` ：バグ調査・修正。軽微バグはCLI即修正、仕様変更は設計フェーズへ戻る判断も含む
+> - `/update-docs` ：実装に合わせてDocs一式を更新しPROJECT.mdの変更履歴も追記
 
 ---
 
@@ -115,6 +142,33 @@ CLAUDE.mdを読みました。企画フェーズを開始します。
 
 ---
 
+## Claude Code コマンド一覧
+
+> **Claude Code（CLI）専用。** ターミナルでプロジェクトルートに移動後 `claude` を起動し、`/コマンド名` で実行。
+> Claude Desktopでは使用不可（Claude DesktopはUnityMCPとの連携専用）。
+> コマンドファイルは `.claude/commands/` に配置されており、Gitで管理される。
+
+| コマンド | 使用フェーズ | ツール | 内容 |
+|---|---|---|---|
+| `/new-spec` | 企画 | Claude Code CLI | 仕様書テンプレートを展開して対話形式で作成 |
+| `/gen-design` | 設計 | Claude Code CLI | 仕様書を読んで設計書を自動生成 |
+| `/gen-scripts` | 実装 | Claude Code CLI | 設計書からスクリプト一括生成（エラー自己修正） |
+| `/gen-scene` | 実装 | Claude Code CLI | シーン構成書に従いTitleScene・BattleSceneを構築 |
+| `/check-diff` | テスト | Claude Code CLI | 実装とドキュメントの差分をレポート形式で出力 |
+| `/debug` | テスト | Claude Code CLI | バグ調査・修正（軽微バグ即修正 / 仕様変更は設計フェーズへ） |
+| `/update-docs` | 共通 | Claude Code CLI | 実装に合わせてDocs一式を更新・変更履歴を追記 |
+
+### コマンドとツールの使い分け
+
+```
+企画フェーズ  → Claude Desktop（UnityMCP接続）+ /new-spec（CLI）
+設計フェーズ  → Claude Code CLI（/gen-design）
+実装フェーズ  → Claude Code CLI（/gen-scripts → /gen-scene）
+テストフェーズ → Claude Desktop（UnityMCP）+ Claude Code CLI（/check-diff / /debug）
+```
+
+---
+
 ## セッション開始時のプロンプト集
 
 ### 基本の引き継ぎ
@@ -147,6 +201,91 @@ Assets/Scripts/ のコードを読み、Assets/Docs/ の仕様書と設計書を
 最新の実装に合わせて更新してください。
 ```
 
+
+---
+
+## テンプレートリポジトリ運用（②方式）
+
+> 新規プロジェクト開始時はこの手順に従う。
+> CLAUDE.md・PROJECT.md・`.claude/commands/` をテンプレートとして使い回す。
+
+### テンプレートに含まれるもの
+
+```
+{テンプレートリポジトリ}/
+├── CLAUDE.md                     ← 本ファイル（共通フロー・テンプレート集）
+└── .claude/
+    └── commands/
+        ├── new-spec.md           ← 設計に依存しない（そのまま使える）
+        ├── gen-design.md         ← 設計に依存しない（そのまま使える）
+        ├── gen-scripts.md        ← ⚠️ 設計書完成後に並列グループを更新が必要
+        ├── gen-scene.md          ← 設計に依存しない（そのまま使える）
+        ├── check-diff.md         ← 設計に依存しない（そのまま使える）
+        ├── update-docs.md        ← 設計に依存しない（そのまま使える）
+        └── debug.md              ← 設計に依存しない（そのまま使える）
+```
+
+> `PROJECT.md` はプロジェクト固有情報のため、テンプレートには含めない。
+> 新規プロジェクト開始時に新たに作成する。
+
+---
+
+### 新規プロジェクト開始手順
+
+```
+ステップ1：テンプレートをコピー
+  テンプレートリポジトリをコピーして新規プロジェクトのルートに配置
+  CLAUDE.md・.claude/commands/ がそのまま使える状態になる
+
+ステップ2：PROJECT.md を新規作成
+  プロジェクト固有情報（タイトル・ジャンル・注意事項）を記載する
+  Assets/Docs/PROJECT.md として保存
+
+ステップ3：企画フェーズ（/new-spec）
+  → 仕様書完成・Git commit
+
+ステップ4：設計フェーズ（/gen-design）
+  → 設計書完成・人の確認
+
+ステップ5：gen-scripts.md の並列グループを更新 ← ⚠️ 重要
+  設計書のクラス構成・依存関係ツリーをもとに
+  /gen-scripts の並列実行グループを書き換える
+  （詳細は下記「gen-scripts.md の更新ルール」参照）
+  → Git commit
+
+ステップ6：実装フェーズ（/gen-scripts → /gen-scene）
+  → スクリプト生成・シーン構築・人の確認・Git commit
+
+ステップ7：テストフェーズ（Claude Desktop + UnityMCP）
+  → /check-diff / /debug でバグ修正・仕様書更新
+```
+
+---
+
+### gen-scripts.md の更新ルール
+
+`/gen-scripts` の並列グループは**設計書の依存関係ツリーを読んで更新する**。
+並列化の判断基準は「互いのクラスを using / 参照していないか」。
+
+**基本的な並列化パターン（Unityプロジェクト共通）：**
+
+```
+ステップ1（並列）：Enum・ScriptableObject・静的クラス
+  → 誰にも依存しないため必ず最初・全グループ並列OK
+
+ステップ2（並列）：純粋C#クラス（MonoBehaviour非依存）
+  → Enumにのみ依存するため、ステップ1完了後に並列実行
+
+ステップ3（並列）：Core MonoBehaviour（GameManager等）
+  → 純粋C#クラスを参照するため、ステップ2完了後
+
+ステップ4（並列）：UI・AI・その他MonoBehaviour
+  → Coreを参照するため、ステップ3完了後
+  → UIとAIは互いに独立していれば並列OK
+```
+
+> 設計書の依存関係が上記パターンと異なる場合は、
+> Claude Codeに「設計書を読んで並列グループを提案して」と依頼すればよい。
 
 ---
 
