@@ -112,6 +112,26 @@ public class PoolRowUI : MonoBehaviour
     void HighlightChips(bool highlight)
     {
         if (_currentPool == null) return;
+        var _gm = GameManager.Instance;
+        if (_gm == null) return;
+
+        // highlight=false の場合は常に色をリセット（フェーズ問わず）
+        if (!highlight)
+        {
+            var res0 = _currentPool.resources;
+            for (int i = 0; i < 3; i++)
+            {
+                if (chipImages[i] == null) continue;
+                bool exists = i < res0.Count;
+                chipImages[i].color = exists ? PlayerPanelUI.ResColor(res0[i]) : new Color(0.15f, 0.15f, 0.2f);
+            }
+            return;
+        }
+
+        // highlight=true はAcquireフェーズかつ人間のターンのみ
+        var _ph = _gm.turnManager.currentPhase;
+        if (_ph != GamePhase.AcquireP1 && _ph != GamePhase.AcquireP2) return;
+        if (GameSettings.Mode == GameMode.AI && _gm.CurrentActorIndex == 1) return;
         var res = _currentPool.resources;
         for (int i = 0; i < 3; i++)
         {

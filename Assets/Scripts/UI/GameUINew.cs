@@ -214,12 +214,12 @@ public class GameUINew : MonoBehaviour
         bool poolOn    = isAcquire;
         bool controlOn = isAssign && (!isAiMode || actorIdx == 0);
 
-        // 既存パルスを停止してリセット
+        // 既存パルスを停止してリセット（色も明示的にクリア）
         if (_hlPulse != null) { StopCoroutine(_hlPulse); _hlPulse = null; }
-        SetPanelHighlight("Player1Panel", false);
-        SetPanelHighlight("Player2Panel", false);
-        SetPanelHighlight("PoolPanel",    false);
-        SetPanelHighlight("ControlPanel", false);
+        ApplyHighlightColor("Player1Panel", HL_OFF);
+        ApplyHighlightColor("Player2Panel", HL_OFF);
+        ApplyHighlightColor("PoolPanel",    HL_OFF);
+        ApplyHighlightColor("ControlPanel", HL_OFF);
 
         // Pool・ControlのみパルスON（プレイヤーパネルは枠なし）
         if (poolOn || controlOn)
