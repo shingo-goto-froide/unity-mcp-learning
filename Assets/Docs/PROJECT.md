@@ -19,10 +19,7 @@
 | ファイル | 役割 | 主な読者 | 最終更新 |
 |---|---|---|---|
 | CLAUDE.md | Claudeとの作業フロー・共通ルール・プロンプト集。どのプロジェクトでも使い回せるテンプレート | Claude（セッション開始時に最初に読む） | 2026-04-03 |
-| PROJECT.md | このプロジェクト固有の情報。概要・注意事項・TODO・変更履歴 | Claude（CLAUDE.mdの次に読む） | 2026-04-06 | SlotRow.cs | 埋まり済み段へのDIS挙動を空振り仕様に変更（_pendingLockDuration機構を削除）|
-| 2026-04-06 | SlotRow.cs | 埋まり済み段へのDIS挙動を仕様確認・明文化。_pendingLockDuration による予約ロック機構（今ターン発動・翌ターンからロック）が実装済みであることを確認 |
-| 2026-04-06 | PlayerPanelUI / GameUINew / GameManager | DRAW処理（両者同時HP0でDRAW!表示）・シールド半減フィードバック演出（オレンジフラッシュ）追加 |
-| 2026-04-06 |
+| PROJECT.md | このプロジェクト固有の情報。概要・注意事項・TODO・変更履歴 | Claude（CLAUDE.mdの次に読む） | 2026-04-07 |
 | 仕様書_v2.0.md | ゲームのルール・フェーズ・バランス数値など「何を作るか」を定義する | Claude・開発者 | 2026-04-03 |
 | 設計書_v2.0.md | スクリプト構成・クラス設計・メソッド定義など「どう作るか」を定義する | Claude・開発者 | 2026-04-03 |
 | シーン構成書.md | BattleScene・TitleSceneのHierarchy構造とInspector値。シーン変更時は必ず更新 | Claude（シーン作業時） | 2026-04-03 |
@@ -121,3 +118,17 @@ UIテキストには英数字のみ使用すること。
 | 2026-04-06 | - | 実装・シーン | AnnouncementUI.cs追加：ゲーム開始（GAME START）・各フェーズ（ACQUIRE/ASSIGN/RESOLVE）アナウンス演出 |
 | 2026-04-06 | - | 実装 | AIController・GameManager(Resolve)：アナウンス演出終了まで待機するよう修正 |
 | 2026-04-06 | - | シーン | BattleScene UIサイズ調整：ControlPanel高さ210→240・PoolPanel560×178・各フォントサイズ拡大 |
+| 2026-04-07 | - | 実装 | SlotRow.AddLock：完成行への予約ロック機構追加（Clear時に適用・今ターン発動・次Assignからロック） |
+| 2026-04-07 | - | 実装・シーン | RulesPanel Prefab化（Assets/Prefabs/RulesPanel.prefab）・RulesPanelController.cs追加 |
+| 2026-04-07 | - | 実装・シーン | RulesPanelにScrollRect+Scrollbar追加・閉じるボタンをContentPanel外へ移動・ラベル「閉じる」統一 |
+| 2026-04-07 | - | 実装 | EffectManager：DEF+DIS同時発動時にDISを0.5秒遅延（PlayDisruptDelayed追加） |
+| 2026-04-07 | - | 仕様書 | 同時発動の処理順序（全9パターン）追記・Just Guard成立条件の明文化 |
+| 2026-04-07 | - | 実装 | ATKコンボ：両者同時ダメージ適用でDRAW判定を正確に。演出も同時起動・テキストをパネル側面HP付近に配置 |
+| 2026-04-07 | - | 実装・仕様書 | DISコンボ廃止：lockTable {1,2,3,4,5}に復元・duration常時1固定・関連コード削除 |
+| 2026-04-07 | - | 実装 | Resolveロックカウントダウン：TickLocksBeforeResolve直後にRefreshAll+0.3秒待機を追加 |
+| 2026-04-07 | - | 実装・仕様書 | Assignフェーズ同時コミット化：AI先手時に計画を保留し人間EndAssign時に一括適用（ComputePlan/ApplyPendingPlan機構） |
+| 2026-04-07 | - | 実装・仕様書 | Assignフェーズのスロット隠蔽を撤廃（同時コミット方式で不要。前ターン配置は常時表示） |
+| 2026-04-07 | - | 実装 | EffectManager：IsPlaying/StartTracked追跡機構追加。全サブ演出含めた完全待機を実現 |
+| 2026-04-07 | - | 実装 | GameManager ResolveCoroutine：行ループ・ATKコンボ・シールド半減をIsPlaying完全待機に変更 |
+| 2026-04-07 | - | 実装 | 満杯時のTake防止：PoolRowUIにIsFull()チェック追加・GameManager SelectPoolに満杯ガード追加 |
+| 2026-04-07 | - | 実装・シーン | SkipボタンをAcquireフェーズ中常時表示（満杯時オレンジ・通常は緑）・PoolPanel高さ178→224 |
