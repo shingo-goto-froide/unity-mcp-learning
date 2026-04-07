@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using TMPro;
 
@@ -171,7 +171,9 @@ public class AnnouncementUI : MonoBehaviour
                 mainText.fontSize  = 60;
                 mainText.color     = White;
                 mainText.fontStyle = TMPro.FontStyles.Bold;
-                subText.text       = $"Turn {turn}";
+                int firstIdx = gm != null ? gm.turnManager.FirstPlayerIndex : 0;
+                bool aiFirst = GameSettings.Mode == GameMode.AI && firstIdx == 1;
+                subText.text = aiFirst ? "AI のターン" : "あなたのターン";
                 break;
             case GamePhase.AssignP1:
                 mainText.text      = "ASSIGN";

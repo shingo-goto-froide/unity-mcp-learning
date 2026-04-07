@@ -1,5 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 public class ControlPanelUI : MonoBehaviour
@@ -31,7 +32,6 @@ public class ControlPanelUI : MonoBehaviour
 
     public void Initialize()
     {
-        // 重複リスナー防止のため先にクリア
         attackBtn? .onClick.RemoveAllListeners();
         defenseBtn?.onClick.RemoveAllListeners();
         disruptBtn?.onClick.RemoveAllListeners();
@@ -56,7 +56,7 @@ public class ControlPanelUI : MonoBehaviour
             GameManager.Instance?.ResetAssign();
             _selected = ResourceType.None;
             Refresh();
-            GameUINew.Instance?.RefreshAll();  // スロット・Res欄も更新
+            GameUINew.Instance?.RefreshAll();
         });
 
         for (int i = 0; i < 5; i++)
@@ -75,10 +75,42 @@ public class ControlPanelUI : MonoBehaviour
                 }
                 Refresh();
                 GameUINew.Instance?.RefreshAll();
-                // ボタンの選択状態（ハイライト）を即座にクリア
+                // マウスが同じ行上にある場合、次のスロットを再ハイライト
+                HoverRow(row, true);
                 UnityEngine.EventSystems.EventSystem.current?.SetSelectedGameObject(null);
             });
+
+            // ホバーイベント追加
+            if (rowBtns[i] == null) continue;
+            var trigger = rowBtns[i].GetComponent<EventTrigger>()
+                       ?? rowBtns[i].gameObject.AddComponent<EventTrigger>();
+            trigger.triggers.Clear();
+
+            var enterEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enterEntry.callback.AddListener(_ => HoverRow(row, true));
+            trigger.triggers.Add(enterEntry);
+
+            var exitEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exitEntry.callback.AddListener(_ => HoverRow(row, false));
+            trigger.triggers.Add(exitEntry);
         }
+    }
+
+    // 行ボタンホバー時：次アサイン予定スロット単体をハイライト
+    void HoverRow(int rowIdx, bool on)
+    {
+        var ui = GameUINew.Instance;
+        var gm = GameManager.Instance;
+        if (ui == null || gm == null) return;
+
+        // リソース未選択 or 配置不可行はハイライトしない
+        if (on && (_selected == ResourceType.None
+            || !gm.players[gm.CurrentActorIndex].slotGrid.rows[rowIdx].CanAssign(_selected)))
+            return;
+
+        var panel = gm.CurrentActorIndex == 0 ? ui.player1Panel : ui.player2Panel;
+        int slotIdx = gm.players[gm.CurrentActorIndex].slotGrid.rows[rowIdx].filledCount;
+        panel?.HoverSlot(rowIdx, slotIdx, on);
     }
 
     void SelectResource(ResourceType t)
@@ -97,13 +129,12 @@ public class ControlPanelUI : MonoBehaviour
         {
             var rMsg = GameManager.Instance?.ResolveMessage;
             phaseLabel.text = string.IsNullOrEmpty(rMsg)
-                ? $"Turn {gm.turnManager.turnCount}  |  {ph}"
+                ? $"Turn {gm.turnManager.turnCount}  |  {ToJP(ph)}"
                 : rMsg;
         }
 
         bool isAssign = ph == GamePhase.AssignP1 || ph == GamePhase.AssignP2;
         int pi = gm.CurrentActorIndex;
-        // AIターン中は操作を受け付けない
         bool isHumanTurn = GameSettings.Mode != GameMode.AI || pi != 1;
         isAssign = isAssign && isHumanTurn;
 
@@ -116,7 +147,7 @@ public class ControlPanelUI : MonoBehaviour
         }
 
         if (selectedLabel != null)
-            selectedLabel.text = $"Selected: {(_selected == ResourceType.None ? "-" : _selected.ToString())}";
+            selectedLabel.text = $"選択中: {(_selected == ResourceType.None ? "-" : _selected.ToString())}";
 
         Color rowNormal = new Color(0.22f, 0.32f, 0.48f);
         for (int i = 0; i < 5; i++)
@@ -146,6 +177,19 @@ public class ControlPanelUI : MonoBehaviour
         for (int i = 0; i < 5; i++) rowBtns[i]?.gameObject.SetActive(isAssign);
         endAssignBtn?.gameObject.SetActive(isAssign);
         resetBtn?.gameObject.SetActive(isAssign);
+    }
+
+    static string ToJP(GamePhase ph)
+    {
+        switch (ph)
+        {
+            case GamePhase.AcquireP1:
+            case GamePhase.AcquireP2: return "獲得フェーズ";
+            case GamePhase.AssignP1:
+            case GamePhase.AssignP2:  return "配置フェーズ";
+            case GamePhase.Resolve:   return "発動フェーズ";
+            default:                  return ph.ToString();
+        }
     }
 
     void SetResBtn(Button btn, ResourceType t, bool hasResource)

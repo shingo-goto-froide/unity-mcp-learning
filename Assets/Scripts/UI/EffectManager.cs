@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
@@ -33,21 +33,21 @@ public class EffectManager : MonoBehaviour
     public void PlayAttack(RectTransform srcRowRt, RectTransform dstPanelRt, int damage)
         => StartTracked(AttackCoroutine(srcRowRt, dstPanelRt, damage));
 
-    public void PlayDefense(RectTransform defenderPanelRt, RectTransform opponentPanelRt)
-        => StartTracked(DefenseCoroutine(defenderPanelRt, opponentPanelRt));
+    public void PlayDefense(RectTransform defenderPanelRt, RectTransform opponentPanelRt, int shieldAmount = 1)
+        => StartTracked(DefenseCoroutine(defenderPanelRt, opponentPanelRt, shieldAmount));
 
-    public void PlayDisruptDelayed(RectTransform targetPanelRt, float delay)
-        => StartTracked(DelayedDisrupt(targetPanelRt, delay));
+    public void PlayDisruptDelayed(RectTransform targetPanelRt, float delay, int lockAmount = 1)
+        => StartTracked(DelayedDisrupt(targetPanelRt, delay, lockAmount));
 
-    System.Collections.IEnumerator DelayedDisrupt(RectTransform targetPanelRt, float delay)
+    System.Collections.IEnumerator DelayedDisrupt(RectTransform targetPanelRt, float delay, int lockAmount = 1)
     {
         yield return new WaitForSeconds(delay);
-        StartTracked(FlashPanel(targetPanelRt, new Color(0.65f, 0.2f, 0.9f), 0.3f));
+        StartTracked(DisruptCoroutine(targetPanelRt, lockAmount));
     }
 
-    public void PlayDisrupt(RectTransform targetPanelRt)
+    public void PlayDisrupt(RectTransform targetPanelRt, int lockAmount = 1)
     {
-        StartTracked(FlashPanel(targetPanelRt, new Color(0.65f, 0.2f, 0.9f), 0.3f));
+        StartTracked(DisruptCoroutine(targetPanelRt, lockAmount));
     }
 
     public void PlayJustGuard(RectTransform atkRowRt, RectTransform atkPanelRt, RectTransform defPanelRt, int reflectDmg)
@@ -208,7 +208,7 @@ public class EffectManager : MonoBehaviour
 
     // ─── DEF: 縦の盾エフェクト ────────────────────────────────────────────────
 
-    IEnumerator DefenseCoroutine(RectTransform defPanelRt, RectTransform oppPanelRt)
+    IEnumerator DefenseCoroutine(RectTransform defPanelRt, RectTransform oppPanelRt, int shieldAmount = 1)
     {
         if (_canvasRt == null) yield break;
         Color sc = new Color(0.3f, 0.6f, 1f);
@@ -352,7 +352,59 @@ public class EffectManager : MonoBehaviour
         return orb;
     }
 
-    GameObject MakeImg(GameObject parent, float size, Color color)
+    // サイズ指定版 orb 生成（威力別演出用）
+    GameObject CreateOrbGOSized(Color color, float innerSize, float glowSize)
+    {
+        var orb = new GameObject("Orb", typeof(RectTransform));
+        orb.transform.SetParent(_canvasRt, false);
+        var rt = orb.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = Vector2.one * 0.5f;
+        MakeImg(orb, glowSize,  new Color(color.r, color.g, color.b, 0.35f));
+        MakeImg(orb, innerSize, new Color(
+            Mathf.Min(1f, color.r * 0.9f + 0.2f),
+            Mathf.Min(1f, color.g * 0.9f + 0.2f),
+            Mathf.Min(1f, color.b * 0.9f + 0.2f), 1f));
+        return orb;
+    }
+
+    // 粒子数指定版バースト（威力別演出用）
+    IEnumerator BurstCoroutineSized(Vector2 center, Color color, int cnt)
+    {
+        if (_canvasRt == null) yield break;
+        float spread = Mathf.Lerp(60f, 95f, Mathf.InverseLerp(6, 13, cnt));
+        var parts = new (GameObject go, RectTransform rt, Vector2 dir)[cnt];
+        for (int i = 0; i < cnt; i++)
+        {
+            float a  = 360f / cnt * i * Mathf.Deg2Rad;
+            var go = new GameObject("B", typeof(RectTransform), typeof(CanvasRenderer), typeof(UnityEngine.UI.Image));
+            go.transform.SetParent(_canvasRt, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = Vector2.one * 0.5f;
+            rt.anchoredPosition = center;
+            float pSize = Mathf.Lerp(10f, 16f, Mathf.InverseLerp(6, 13, cnt));
+            rt.sizeDelta = new Vector2(pSize, pSize);
+            go.GetComponent<UnityEngine.UI.Image>().color = color;
+            go.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
+            parts[i] = (go, rt, new Vector2(Mathf.Cos(a), Mathf.Sin(a)));
+        }
+        for (float t = 0; t < 0.45f; t += Time.deltaTime)
+        {
+            float p = t / 0.45f;
+            foreach (var (go, rt, dir) in parts)
+            {
+                if (go == null) continue;
+                rt.anchoredPosition = center + dir * (spread * p);
+                rt.localScale = Vector3.one * Mathf.Lerp(1f, 0.1f, p);
+                go.GetComponent<UnityEngine.UI.Image>().color = new Color(color.r, color.g, color.b, 1f - p);
+            }
+            yield return null;
+        }
+        foreach (var (go, _, _) in parts) if (go != null) Destroy(go);
+    }
+
+        GameObject MakeImg(GameObject parent, float size, Color color)
     {
         var go = new GameObject("I", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         go.transform.SetParent(parent.transform, false);
@@ -378,7 +430,33 @@ public class EffectManager : MonoBehaviour
     void SetSX(GameObject go, float x)
     { var s = go.transform.localScale; go.transform.localScale = new Vector3(x, s.y, s.z); }
 
-    IEnumerator FlashPanel(RectTransform panelRt, Color fc, float dur)
+    // DIS: ロック量に応じてフラッシュ強度・回数・テキストを変化
+    IEnumerator DisruptCoroutine(RectTransform targetPanelRt, int lockAmount = 1)
+    {
+        if (_canvasRt == null) yield break;
+
+        float t01      = Mathf.InverseLerp(1f, 5f, lockAmount);
+        Color disColor = Color.Lerp(new Color(0.55f, 0.15f, 0.8f), new Color(0.8f, 0.1f, 1f), t01);
+        float flashDur = Mathf.Lerp(0.25f, 0.45f, t01);
+        int   pulses   = lockAmount >= 4 ? 3 : lockAmount >= 2 ? 2 : 1; // lock量で点滅回数
+        float textSize = Mathf.Lerp(28f, 46f, t01);
+
+        var img = targetPanelRt?.GetComponent<Image>();
+        if (img == null) yield break;
+        Color orig = img.color;
+
+        for (int p = 0; p < pulses; p++)
+        {
+            img.color = new Color(disColor.r, disColor.g, disColor.b, 0.7f);
+            yield return new WaitForSeconds(flashDur * 0.4f);
+            img.color = orig;
+            if (p < pulses - 1) yield return new WaitForSeconds(0.08f);
+        }
+        img.color = orig;
+        StartTracked(FloatText("LOCK!", GetPanelCenter(targetPanelRt), disColor, textSize, 1.0f));
+    }
+
+        IEnumerator FlashPanel(RectTransform panelRt, Color fc, float dur)
     {
         var img = panelRt?.GetComponent<Image>(); if (img == null) yield break;
         Color orig = img.color;

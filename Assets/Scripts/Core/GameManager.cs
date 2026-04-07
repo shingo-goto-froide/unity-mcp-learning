@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 public class GameManager : MonoBehaviour
@@ -190,9 +190,10 @@ public class GameManager : MonoBehaviour
                 OnPhaseChanged?.Invoke(GamePhase.Resolve);
                 GameUINew.Instance?.RefreshAll();
                 GameUINew.Instance?.HighlightResolveRow(i);
-                int rowDmg = (balanceSO != null && balanceSO.dmgTable != null && i < balanceSO.dmgTable.Length)
-                    ? balanceSO.dmgTable[i] : new[]{1,2,4,6,10}[i];
-                GameUINew.Instance?.TriggerResolveEffect(i, p1EffType, p2EffType, rowDmg);
+                int rowDmg    = (balanceSO?.dmgTable    != null && i < balanceSO.dmgTable.Length)    ? balanceSO.dmgTable[i]    : new[]{1,2,4,6,10}[i];
+                int rowShield = (balanceSO?.shieldTable != null && i < balanceSO.shieldTable.Length) ? balanceSO.shieldTable[i] : new[]{1,2,3,4,6}[i];
+                int rowLock   = (balanceSO?.lockTable   != null && i < balanceSO.lockTable.Length)   ? balanceSO.lockTable[i]   : new[]{1,2,3,4,5}[i];
+                GameUINew.Instance?.TriggerResolveEffect(i, p1EffType, p2EffType, rowDmg, rowShield, rowLock);
                 // エフェクトが全部終わるまで待機（最低0.3秒）
                 yield return new UnityEngine.WaitForSeconds(0.3f);
                 while (EffectManager.Instance != null && EffectManager.Instance.IsPlaying)
@@ -291,7 +292,7 @@ public class GameManager : MonoBehaviour
             // 両者同時にHP0 → DRAW
             _isDraw = true;
             _pendingWinner = null;
-            Debug.Log("DRAW!");
+            Debug.Log("引き分け！");
         }
         else
         {

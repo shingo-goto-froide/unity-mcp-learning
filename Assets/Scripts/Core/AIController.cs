@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,6 +81,8 @@ public class AIController : MonoBehaviour
         // アナウンス演出が終わるまで待機
         while (AnnouncementUI.Instance != null && AnnouncementUI.Instance.IsAnimating)
             yield return null;
+        // 演出が完全に閉じ切るまで余裕を持たせる
+        yield return new WaitForSeconds(0.25f);
         yield return new WaitForSeconds(GameSettings.Difficulty == AIDifficulty.Hard ? 0.6f : 0.8f);
         var gm    = GameManager.Instance;
         var pools = gm.poolManager.pools;

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GameUINew : MonoBehaviour
 {
@@ -23,9 +23,10 @@ public class GameUINew : MonoBehaviour
     public UnityEngine.UI.Button restartBtn;
     public UnityEngine.UI.Button toTitleBtn;
 
+    Coroutine _hlPulse;
+
     void Awake()
     {
-        // 重複していたら自分自身を削除して終了
         if (Instance != null && Instance != this)
         {
             Debug.LogWarning("[GameUINew] Duplicate detected and destroyed.");
@@ -62,7 +63,6 @@ public class GameUINew : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         RefreshAll();
 
-        // 旧OnGUI UIを無効化
         var oldUI = GetComponent<GameUI>();
         if (oldUI != null) oldUI.enabled = false;
     }
@@ -88,20 +88,17 @@ public class GameUINew : MonoBehaviour
         controlPanel?.Refresh();
 
         var ph = gm.turnManager.currentPhase;
-        // 先手後手が入れ替わるため CurrentActorIndex で判定
         int activeIdx = gm.CurrentActorIndex;
         bool anyActive = ph == GamePhase.AcquireP1 || ph == GamePhase.AcquireP2
                       || ph == GamePhase.AssignP1  || ph == GamePhase.AssignP2;
         player1Panel?.SetTurnActive(anyActive && activeIdx == 0);
         player2Panel?.SetTurnActive(anyActive && activeIdx == 1);
 
-        // 同時コミット方式のため隠蔽なし（両パネル常に表示）
         player1Panel?.SetSlotsHidden(false);
         player2Panel?.SetSlotsHidden(false);
         SetPhaseHighlight(ph);
     }
 
-    // Resolve演出：指定行をハイライト（両パネル同時）
     public void HighlightResolveRow(int rowIdx)
     {
         player1Panel?.HighlightRow(rowIdx, true);
@@ -117,12 +114,10 @@ public class GameUINew : MonoBehaviour
     static readonly Color HL_ON  = new Color(1f, 0.85f, 0.1f, 0.9f);
     static readonly Color HL_OFF = new Color(0f, 0f, 0f, 0f);
 
-    // Highlightコンテナ配下の4本帯の色をまとめて設定
-    static void SetPanelHighlight(string panelName, bool on)
+    static void ApplyHighlightColor(string panelName, Color c)
     {
         var hl = GameObject.Find(panelName)?.transform.Find("Highlight");
         if (hl == null) return;
-        var c = on ? HL_ON : HL_OFF;
         foreach (Transform strip in hl)
         {
             var img = strip.GetComponent<UnityEngine.UI.Image>();
@@ -130,8 +125,24 @@ public class GameUINew : MonoBehaviour
         }
     }
 
-    // Resolve演出: rowIdx/タイプを渡して各エフェクトを起動
-    public void TriggerResolveEffect(int rowIdx, ResourceType p1Type, ResourceType p2Type, int damage)
+    static void SetPanelHighlight(string panelName, bool on)
+        => ApplyHighlightColor(panelName, on ? HL_ON : HL_OFF);
+
+    // sin波でalphaをゆっくり上下させるパルス（約1.5秒周期、alpha 0.35〜0.9）
+    System.Collections.IEnumerator PulseHighlights(bool pool, bool control)
+    {
+        while (true)
+        {
+            float t     = (Mathf.Sin(Time.time * (Mathf.PI * 2f / 1.5f)) + 1f) * 0.5f;
+            float alpha = Mathf.Lerp(0.35f, 0.9f, t);
+            var c = new Color(1f, 0.85f, 0.1f, alpha);
+            if (pool)    ApplyHighlightColor("PoolPanel",    c);
+            if (control) ApplyHighlightColor("ControlPanel", c);
+            yield return null;
+        }
+    }
+
+    public void TriggerResolveEffect(int rowIdx, ResourceType p1Type, ResourceType p2Type, int damage, int shieldAmount = 0, int lockAmount = 0)
     {
         var em = EffectManager.Instance;
         if (em == null) return;
@@ -139,7 +150,6 @@ public class GameUINew : MonoBehaviour
         var p1Rt = player1Panel?.GetComponent<RectTransform>();
         var p2Rt = player2Panel?.GetComponent<RectTransform>();
 
-        // 攻撃Row中心のRt取得
         RectTransform GetRowRt(PlayerPanelUI panel)
         {
             var sc = panel?.transform.Find("SlotsContainer");
@@ -148,7 +158,6 @@ public class GameUINew : MonoBehaviour
             return panel?.GetComponent<RectTransform>();
         }
 
-        // Just Guard判定
         bool jg = (p1Type == ResourceType.Attack && p2Type == ResourceType.Defense) ||
                   (p2Type == ResourceType.Attack && p1Type == ResourceType.Defense);
         if (jg)
@@ -162,72 +171,73 @@ public class GameUINew : MonoBehaviour
             return;
         }
 
-        // DEFが絡む場合はDISを0.5秒遅延（DEF先行仕様に合わせる）
         bool anyDef = p1Type == ResourceType.Defense || p2Type == ResourceType.Defense;
 
-        // P1エフェクト
         if (p1Type == ResourceType.Attack  && p2Rt != null) em.PlayAttack(GetRowRt(player1Panel), p2Rt, damage);
-        if (p1Type == ResourceType.Defense && p1Rt != null) em.PlayDefense(p1Rt, p2Rt);
+        if (p1Type == ResourceType.Defense && p1Rt != null) em.PlayDefense(p1Rt, p2Rt, shieldAmount);
         if (p1Type == ResourceType.Disrupt && p2Rt != null)
         {
-            if (anyDef) em.PlayDisruptDelayed(p2Rt, 0.5f);
-            else        em.PlayDisrupt(p2Rt);
+            if (anyDef) em.PlayDisruptDelayed(p2Rt, 0.5f, lockAmount);
+            else        em.PlayDisrupt(p2Rt, lockAmount);
         }
 
-        // P2エフェクト（ATK同士DRAW含む）
         if (p2Type == ResourceType.Attack  && p1Rt != null) em.PlayAttack(GetRowRt(player2Panel), p1Rt, damage);
-        if (p2Type == ResourceType.Defense && p2Rt != null) em.PlayDefense(p2Rt, p1Rt);
+        if (p2Type == ResourceType.Defense && p2Rt != null) em.PlayDefense(p2Rt, p1Rt, shieldAmount);
         if (p2Type == ResourceType.Disrupt && p1Rt != null)
         {
-            if (anyDef) em.PlayDisruptDelayed(p1Rt, 0.5f);
-            else        em.PlayDisrupt(p1Rt);
+            if (anyDef) em.PlayDisruptDelayed(p1Rt, 0.5f, lockAmount);
+            else        em.PlayDisrupt(p1Rt, lockAmount);
         }
     }
 
     void SetPhaseHighlight(GamePhase ph)
     {
-        var gm2 = GameManager.Instance;
-        int actorIdx   = gm2 != null ? gm2.CurrentActorIndex : 0;
+        var gm2      = GameManager.Instance;
+        int actorIdx = gm2 != null ? gm2.CurrentActorIndex : 0;
         bool anyTurn   = ph == GamePhase.AcquireP1 || ph == GamePhase.AcquireP2
                       || ph == GamePhase.AssignP1  || ph == GamePhase.AssignP2;
         bool isAcquire = ph == GamePhase.AcquireP1 || ph == GamePhase.AcquireP2;
         bool isAssign  = ph == GamePhase.AssignP1  || ph == GamePhase.AssignP2;
         bool isAiMode  = GameSettings.Mode == GameMode.AI;
 
-        // アサインフェーズ×AIモード：自分（人間=players[0]）のターンのみハイライト
-        // AIのアサインターンは両パネルともハイライトなし
         bool p1On, p2On;
         if (isAssign && isAiMode)
         {
-            p1On = actorIdx == 0; // 人間がactor（先手）のときのみ
-            p2On = false;         // AIパネルは常にオフ
+            p1On = actorIdx == 0;
+            p2On = false;
         }
         else
         {
             p1On = anyTurn && actorIdx == 0;
             p2On = anyTurn && actorIdx == 1;
         }
+        bool poolOn    = isAcquire;
+        bool controlOn = isAssign && (!isAiMode || actorIdx == 0);
 
-        SetPanelHighlight("Player1Panel", p1On);
-        SetPanelHighlight("Player2Panel", p2On);
-        SetPanelHighlight("PoolPanel",    isAcquire);
-        // コントロールパネルも人間のアサインターンのみハイライト
-        SetPanelHighlight("ControlPanel", isAssign && (!isAiMode || actorIdx == 0));
+        // 既存パルスを停止してリセット
+        if (_hlPulse != null) { StopCoroutine(_hlPulse); _hlPulse = null; }
+        SetPanelHighlight("Player1Panel", false);
+        SetPanelHighlight("Player2Panel", false);
+        SetPanelHighlight("PoolPanel",    false);
+        SetPanelHighlight("ControlPanel", false);
+
+        // Pool・ControlのみパルスON（プレイヤーパネルは枠なし）
+        if (poolOn || controlOn)
+            _hlPulse = StartCoroutine(PulseHighlights(poolOn, controlOn));
     }
 
     void OnGameOver(PlayerData winner)
     {
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
-        if (gameOverText != null)  gameOverText.text = $"{winner.Name} Wins!";
+        if (gameOverText != null)  gameOverText.text = $"{winner.Name} の勝利！";
     }
 
     void OnDrawGame()
     {
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
-        if (gameOverText != null)  gameOverText.text = "DRAW!";
+        if (gameOverText != null)  gameOverText.text = "引き分け！";
     }
 
-    // シールド半減フィードバック：両パネルにフラッシュ演出を依頼
     public void TriggerShieldHalved(int shield0Before, int shield1Before)
     {
         var gm = GameManager.Instance;
@@ -238,7 +248,7 @@ public class GameUINew : MonoBehaviour
         player2Panel?.FlashShieldHalved(shield1Before, after1);
     }
 
-        void OnDestroy()
+    void OnDestroy()
     {
         if (Instance == this) Instance = null;
     }

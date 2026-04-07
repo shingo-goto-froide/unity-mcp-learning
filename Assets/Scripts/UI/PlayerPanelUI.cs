@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -18,6 +18,8 @@ public class PlayerPanelUI : MonoBehaviour
 
     PlayerData _player;
     int _highlightedRow = -1;  // Resolve演出中のハイライト行（-1=なし）
+    int _hoverRow  = -1;  // ホバー中の行インデックス
+    int _hoverSlot = -1;  // ホバー中のスロットインデックス
     bool _slotsHidden = false;   // Assignフェーズ中の相手スロット隠蔽フラグ
 
     static readonly Color[] rowColors =
@@ -59,7 +61,7 @@ public class PlayerPanelUI : MonoBehaviour
             hpSlider.value = _player.currentHp;
         if (shieldText != null)
         {
-            shieldText.text = $"Shield {_player.shield}";
+            shieldText.text = $"シールド {_player.shield}";
             shieldText.gameObject.SetActive(true);
         }
     }
@@ -99,6 +101,9 @@ public class PlayerPanelUI : MonoBehaviour
                 Color slotColor = filled ? ResColor(slotRow.assignedType) : rowColors[row];
                 if (row == _highlightedRow && !locked)
                     slotColor = Color.Lerp(slotColor, new Color(1f, 0.85f, 0.1f), 0.7f);
+                // ホバー中の次アサイン予定スロットを白寄りにハイライト
+                if (row == _hoverRow && s == _hoverSlot && !locked && !filled)
+                    slotColor = Color.Lerp(slotColor, Color.white, 0.55f);
                 if (img != null)     img.color = slotColor;
                 if (lockOvl != null)
                 {
@@ -123,7 +128,7 @@ public class PlayerPanelUI : MonoBehaviour
         foreach (var go in toDestroy) { go.transform.SetParent(null); Object.Destroy(go); }
 
         var res = _player.resourceHolder.resources;
-        if (resLabel != null) resLabel.text = $"Res ({res.Count}/6)";
+        if (resLabel != null) resLabel.text = $"リソース ({res.Count}/6)";
 
         foreach (var r in res)
         {
@@ -162,7 +167,15 @@ public class PlayerPanelUI : MonoBehaviour
     public void HighlightRow(int rowIdx, bool on)
     {
         _highlightedRow = on ? rowIdx : -1;
-        RefreshSlots();  // スロット再描画でハイライト反映
+        RefreshSlots();
+    }
+
+    // ホバー中の次アサイン予定スロット単体をハイライト
+    public void HoverSlot(int rowIdx, int slotIdx, bool on)
+    {
+        _hoverRow  = on ? rowIdx  : -1;
+        _hoverSlot = on ? slotIdx : -1;
+        RefreshSlots();
     }
 
     // Assignフェーズ中に相手スロットを隠す（全スロットを暗色・テキスト非表示）
@@ -200,7 +213,7 @@ public class PlayerPanelUI : MonoBehaviour
         if (shieldText == null) yield break;
         var origColor = shieldText.color;
         var orange    = new Color(1f, 0.6f, 0.1f);
-        shieldText.text  = $"Shield {before} >> {after}";
+        shieldText.text  = $"シールド {before} >> {after}";
         shieldText.color = orange;
         for (int i = 0; i < 2; i++)
         {
@@ -212,7 +225,7 @@ public class PlayerPanelUI : MonoBehaviour
         shieldText.color = orange;
         yield return new UnityEngine.WaitForSeconds(0.4f);
         shieldText.color = origColor;
-        shieldText.text  = $"Shield {after}";
+        shieldText.text  = $"シールド {after}";
     }
 
         public static string Short(ResourceType t) => t switch

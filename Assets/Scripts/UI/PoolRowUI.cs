@@ -1,5 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 public class PoolRowUI : MonoBehaviour
@@ -10,7 +11,11 @@ public class PoolRowUI : MonoBehaviour
     public TextMeshProUGUI   takeButtonLabel;
     public Button            takeButton;
 
+    [Header("B: ボタン内プレビューチップ")]
+    public Image[] previewChipImages = new Image[2];
+
     int _poolIndex;
+    ResourcePool _currentPool;
 
     void OnDestroy()
     {
@@ -23,7 +28,6 @@ public class PoolRowUI : MonoBehaviour
         bool acquirePhase = phase == GamePhase.AcquireP1 || phase == GamePhase.AcquireP2;
         bool isHumanTurn = GameSettings.Mode != GameMode.AI
             || GameManager.Instance?.CurrentActorIndex != 1;
-        // 満杯のときはボタンを無効化
         bool playerFull = false;
         if (acquirePhase && isHumanTurn && GameManager.Instance != null)
         {
@@ -37,7 +41,7 @@ public class PoolRowUI : MonoBehaviour
     public void Initialize(int index)
     {
         _poolIndex = index;
-        if (poolLabel != null) poolLabel.text = $"Pool {index}:";
+        if (poolLabel != null) poolLabel.text = $"プール {index}:";
 
         takeButton?.onClick.RemoveAllListeners();
         takeButton?.onClick.AddListener(() =>
@@ -46,19 +50,35 @@ public class PoolRowUI : MonoBehaviour
             UnityEngine.EventSystems.EventSystem.current?.SetSelectedGameObject(null);
         });
 
-        // 二重購読を防いでフェーズ変更を購読
+        // A: TakeButtonにホバーイベントを追加
+        if (takeButton != null)
+        {
+            var trigger = takeButton.GetComponent<EventTrigger>()
+                       ?? takeButton.gameObject.AddComponent<EventTrigger>();
+            trigger.triggers.Clear();
+
+            var enterEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enterEntry.callback.AddListener(_ => HighlightChips(true));
+            trigger.triggers.Add(enterEntry);
+
+            var exitEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exitEntry.callback.AddListener(_ => HighlightChips(false));
+            trigger.triggers.Add(exitEntry);
+        }
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnPhaseChanged -= OnPhaseChanged;
             GameManager.Instance.OnPhaseChanged += OnPhaseChanged;
-            // 現在のフェーズで即時反映
             OnPhaseChanged(GameManager.Instance.turnManager.currentPhase);
         }
     }
 
     public void Refresh(ResourcePool pool, bool interactable)
     {
+        _currentPool = pool;
         var res = pool.resources;
+
         for (int i = 0; i < 3; i++)
         {
             bool exists = i < res.Count;
@@ -72,8 +92,39 @@ public class PoolRowUI : MonoBehaviour
                 chipImages[i].color = exists ? PlayerPanelUI.ResColor(res[i]) : new Color(0.15f, 0.15f, 0.2f);
         }
 
+        // B: ボタン内プレビューチップの色を更新
+        for (int i = 0; i < 2; i++)
+        {
+            if (previewChipImages[i] == null) continue;
+            bool exists = i < res.Count;
+            previewChipImages[i].color = exists
+                ? PlayerPanelUI.ResColor(res[i])
+                : new Color(0.2f, 0.2f, 0.25f, 0.5f);
+            previewChipImages[i].gameObject.SetActive(exists);
+        }
+
         if (takeButton != null)    takeButton.interactable = interactable;
         if (takeButtonLabel != null)
-            takeButtonLabel.text = res.Count <= 1 ? "Take x1" : "Take x2";
+            takeButtonLabel.text = res.Count <= 1 ? "取得 x1" : "取得 x2";
+    }
+
+    // A: ホバー時にチップの明暗を切り替える
+    void HighlightChips(bool highlight)
+    {
+        if (_currentPool == null) return;
+        var res = _currentPool.resources;
+        for (int i = 0; i < 3; i++)
+        {
+            if (chipImages[i] == null) continue;
+            bool exists = i < res.Count;
+            if (!exists) continue;
+            Color baseColor = PlayerPanelUI.ResColor(res[i]);
+            if (highlight)
+                chipImages[i].color = i < 2
+                    ? Color.Lerp(baseColor, Color.white, 0.45f)  // 取得される2枚：明るく
+                    : Color.Lerp(baseColor, Color.black, 0.55f); // 残る1枚：暗く
+            else
+                chipImages[i].color = baseColor; // 通常に戻す
+        }
     }
 }
