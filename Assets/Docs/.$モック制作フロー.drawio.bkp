@@ -1,0 +1,205 @@
+<mxfile>
+  <diagram name="モック制作フロー" id="mock-flow">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="モック制作フロー" style="text;html=1;fontSize=20;fontStyle=1;align=center;verticalAlign=middle;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="200" y="10" width="600" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Swimlane: 人 -->
+        <mxCell id="lane1" value="人（企画者）" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#dae8fc;strokeColor=#6c8ebf;horizontal=0;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="20" y="60" width="960" height="160" as="geometry"/>
+        </mxCell>
+
+        <!-- Swimlane: Claude Code CLI -->
+        <mxCell id="lane2" value="Claude Code CLI" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#d5e8d4;strokeColor=#82b366;horizontal=0;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="20" y="220" width="960" height="180" as="geometry"/>
+        </mxCell>
+
+        <!-- Swimlane: Claude Desktop + Unity -->
+        <mxCell id="lane3" value="Claude Desktop&#xa;(UnityMCP)&#xa;+ Unity" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#fff2cc;strokeColor=#d6b656;horizontal=0;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="20" y="400" width="960" height="160" as="geometry"/>
+        </mxCell>
+
+        <!-- フェーズラベル -->
+        <mxCell id="ph1" value="企画" style="text;html=1;fontSize=11;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;whiteSpace=wrap;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="70" y="62" width="80" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="ph2" value="設計" style="text;html=1;fontSize=11;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;whiteSpace=wrap;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="220" y="62" width="80" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="ph3" value="コアループ実装" style="text;html=1;fontSize=11;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;whiteSpace=wrap;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="360" y="62" width="110" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="ph4" value="プレイテスト" style="text;html=1;fontSize=11;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;whiteSpace=wrap;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="530" y="62" width="100" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="ph5" value="残り実装" style="text;html=1;fontSize=11;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;whiteSpace=wrap;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="690" y="62" width="80" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="ph6" value="テスト" style="text;html=1;fontSize=11;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;whiteSpace=wrap;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="840" y="62" width="80" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- 人レーン -->
+        <mxCell id="h1" value="アイデアを伝える" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="h2" value="対話で&#xa;深掘り" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="60" y="155" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="h3" value="設計書を&#xa;確認・承認" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="215" y="130" width="95" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="h4" value="動作確認" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="370" y="130" width="90" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_decision" value="面白い？" style="rhombus;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="540" y="105" width="80" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="h5" value="全体確認&#xa;・承認" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="690" y="130" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="h6" value="最終確認" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="840" y="130" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Claude Code CLI レーン -->
+        <mxCell id="c1" value="/new-spec&#xa;仕様書生成" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="55" y="250" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="/gen-design&#xa;設計書生成" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="210" y="250" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="/gen-scripts&#xa;スクリプト生成" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="350" y="240" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b" value="/gen-scene&#xa;シーン構築" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="350" y="300" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4" value="/playtest&#xa;面白さ検証" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="530" y="250" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c5" value="残りの&#xa;スクリプト&#xa;・シーン生成" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="680" y="250" width="100" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c6" value="/check-diff&#xa;差分確認" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="830" y="240" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c6b" value="/debug&#xa;バグ修正" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="830" y="300" width="100" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Claude Desktop レーン -->
+        <mxCell id="d1" value="UnityMCPで&#xa;プレイテスト実行" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="525" y="430" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="UnityMCPで&#xa;動作確認・テスト" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="830" y="430" width="110" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- エッジ -->
+        <mxCell id="e_h1h2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#AAAAAA;" edge="1" source="h1" target="h2" parent="1"/>
+        <mxCell id="e_h2c1" value="「OK」" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="h2" target="c1" parent="1"/>
+        <mxCell id="e_c1c2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#AAAAAA;" edge="1" source="c1" target="c2" parent="1"/>
+        <mxCell id="e_c2h3" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="c2" target="h3" parent="1"/>
+        <mxCell id="e_h3c3" value="承認" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="h3" target="c3" parent="1"/>
+        <mxCell id="e_c3c3b" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#AAAAAA;" edge="1" source="c3" target="c3b" parent="1"/>
+        <mxCell id="e_c3bh4" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="c3b" target="h4" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="415" y="380"/>
+              <mxPoint x="490" y="380"/>
+              <mxPoint x="490" y="150"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_h4c4" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="h4" target="c4" parent="1"/>
+        <mxCell id="e_c4d1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="c4" target="d1" parent="1"/>
+        <mxCell id="e_d1h" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="d1" target="h_decision" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="455"/>
+              <mxPoint x="660" y="145"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;fontStyle=1;fontColor=#009900;" edge="1" source="h_decision" target="c5" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="145"/>
+              <mxPoint x="630" y="280"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_no" value="No（設計へ戻る）" style="edgeStyle=orthogonalEdgeStyle;fontStyle=1;fontColor=#CC0000;dashed=1;strokeColor=#CC0000;" edge="1" source="h_decision" target="c2" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="195"/>
+              <mxPoint x="265" y="195"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_c5h5" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="c5" target="h5" parent="1"/>
+        <mxCell id="e_h5c6" value="承認" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="h5" target="c6" parent="1"/>
+        <mxCell id="e_c6c6b" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#AAAAAA;" edge="1" source="c6" target="c6b" parent="1"/>
+        <mxCell id="e_c6d2" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="c6b" target="d2" parent="1"/>
+        <mxCell id="e_d2h6" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="d2" target="h6" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="945" y="455"/>
+              <mxPoint x="945" y="150"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_back" value="バグ・仕様変更→設計へ戻る" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#CC0000;fontColor=#CC0000;fontStyle=1;" edge="1" source="h6" target="c2" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="100"/>
+              <mxPoint x="265" y="100"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 凡例 -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="20" y="570" width="400" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_title" value="凡例" style="text;html=1;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="575" width="50" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1" value="" style="endArrow=classic;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="610" as="sourcePoint"/>
+            <mxPoint x="90" y="610" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg1t" value="同レーン内の順序" style="text;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="95" y="602" width="110" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2" value="" style="endArrow=classic;dashed=1;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="635" as="sourcePoint"/>
+            <mxPoint x="90" y="635" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg2t" value="レーン間の連携" style="text;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="95" y="627" width="100" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3" value="" style="endArrow=classic;dashed=1;strokeColor=#CC0000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="610" as="sourcePoint"/>
+            <mxPoint x="280" y="610" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg3t" value="手戻り（設計フェーズへ）" style="text;fontSize=10;fontColor=#CC0000;" vertex="1" parent="1">
+          <mxGeometry x="285" y="602" width="140" height="18" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
