@@ -5,7 +5,7 @@
 - `Assets/Docs/仕様書_*.md`（最新版）
 - `Assets/Docs/設計書_*.md`（既存があれば読み込む）
 
-読み込んだ後、CLAUDE.md の設計書テンプレートに従い `Assets/Docs/設計書_v{バージョン}.md` を生成してください。
+読み込んだ後、`.claude/rules/05-templates.md` の設計書テンプレートに従い `Assets/Docs/設計書_v{バージョン}.md` を生成してください。
 
 ---
 

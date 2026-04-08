@@ -47,18 +47,21 @@
 
 ```
 ステップ1（並列）：Enum・ScriptableObject・静的クラス
-  └── グループA：（設計書完成後に記入）
+  └── ResourceType, GamePhase, GameSettings, GameBalanceSO
 
-ステップ2（並列）：純粋C#クラス（MonoBehaviour非依存）
-  └── グループB：（設計書完成後に記入）
-  └── グループC：（設計書完成後に記入）
+ステップ2（並列）：純粋C#クラス（基本データ）
+  └── SlotRow, ResourceHolder, ResourcePool, TurnManager
 
-ステップ3（並列）：Core MonoBehaviour
-  └── グループD：（設計書完成後に記入）
+ステップ3（並列）：純粋C#クラス（複合データ・ロジック）
+  └── SlotGrid, PlayerData, ResourcePoolManager, ActionResolver
+  ※ 設計書に全インターフェース定義済みのため並列生成OK
 
-ステップ4（並列）：UI・AI・その他MonoBehaviour
-  └── グループE：（設計書完成後に記入）
-  └── グループF：（設計書完成後に記入）
+ステップ4：Core MonoBehaviour
+  └── GameManager, AIController
+
+ステップ5（並列）：UI MonoBehaviour
+  └── グループA：GameUINew, PlayerPanelUI, ControlPanelUI, AnnouncementUI
+  └── グループB：PoolPanelUI, PoolRowUI, TitleScreenUI, EffectManager, BattleMenuUI, RulesPanelController
 ```
 
 ---
