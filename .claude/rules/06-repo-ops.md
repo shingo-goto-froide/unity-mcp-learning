@@ -1,4 +1,4 @@
-﻿# テンプレートリポジトリ運用
+# テンプレートリポジトリ運用
 
 > 新規プロジェクト開始時はこの手順に従う。
 > CLAUDE.md・`.claude/` 一式をテンプレートとして使い回す。
@@ -8,13 +8,13 @@
 ```
 {テンプレートリポジトリ}/
 ├── CLAUDE.md                        ← 共通フロー・インデックス
+├── README.md                        ← 人間向け操作手順・環境構築
 └── .claude/
     ├── settings.json                ← Hooks設定（そのまま使える）
-    ├── rules/                       ← 分割ルールファイル（そのまま使える）
+    ├── rules/                       ← Claudeへの指示（起動時に自動ロード）
     │   ├── 01-rules.md
     │   ├── 02-workflow.md
     │   ├── 03-docs.md
-    │   ├── 04-setup.md
     │   ├── 05-templates.md
     │   ├── 06-repo-ops.md
     │   └── 07-troubleshooting.md
@@ -37,34 +37,6 @@
 ```
 
 > `PROJECT.md` はプロジェクト固有情報のため、テンプレートには含めない。
-
----
-
-## 新規プロジェクト開始手順
-
-```
-ステップ1：テンプレートをコピー
-  テンプレートリポジトリをコピーして新規プロジェクトのルートに配置
-  CLAUDE.md・.claude/ 一式がそのまま使える状態になる
-
-ステップ2：企画フェーズ（/new-spec）← PROJECT.md も同時に自動生成される
-  Claude Code CLI で /new-spec を実行
-  → 仕様書_v1.0.md と PROJECT.md が自動生成される
-  → 内容を確認して Git commit
-
-ステップ3：設計フェーズ（/gen-design）
-  → 設計書完成・人の確認 → Git commit
-
-ステップ4：gen-scripts.md の並列グループを更新 ← ⚠️ 重要
-  設計書のクラス構成・依存関係ツリーをもとに書き換える
-  → /update-docs でPROJECT.mdの固有注意事項も追記 → Git commit
-
-ステップ5：実装フェーズ（/gen-scripts → /gen-scene）
-  → スクリプト生成・シーン構築・人の確認・Git commit
-
-ステップ6：テストフェーズ（Claude Desktop + UnityMCP）
-  → /check-diff / /debug でバグ修正・仕様書更新
-```
 
 ---
 

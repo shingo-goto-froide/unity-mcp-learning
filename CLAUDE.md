@@ -16,10 +16,9 @@
 │   ├── 01-rules.md        ← ✅ 行動ルール（必ず守ること・禁止事項）
 │   ├── 02-workflow.md     ← フェーズ詳細・コマンド・エージェント一覧
 │   ├── 03-docs.md         ← Docs構成・更新ルール・Gitコミット
-│   ├── 04-setup.md        ← 環境構築手順（新規PC時）
 │   ├── 05-templates.md    ← 各種テンプレート
-│   ├── 06-repo-ops.md     ← テンプレートリポジトリ運用
-│   └── 07-troubleshooting.md ← トラブル対処・セッションプロンプト集
+│   ├── 06-repo-ops.md     ← テンプレートリポジトリ運用・gen-scripts並列グループ
+│   └── 07-troubleshooting.md ← セッションプロンプト集
 ├── agents/                ← 専門家エージェント（独立コンテキスト）
 │   ├── spec-writer.md     ← 仕様書の対話的作成・更新
 │   ├── scene-builder.md   ← シーン構築・変更
